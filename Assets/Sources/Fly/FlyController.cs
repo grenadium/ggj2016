@@ -3,18 +3,18 @@ using System.Collections;
 
 public class FlyController : MonoBehaviour {
 
-    public const float maxSpeed = 20f; // MAximum speed of the fly
-    public const float sensibility = 0.01f; // value to surpass to apply motion
+    public const float maxSpeed = 20f; // Maximum speed of the fly
+    public const float sensibility = 0.1f; // value to surpass to apply motion
 
     public float accelerationCoef = 2f; // Amount of speed gained by sec
     public float deccelerationCoef = 0.1f; // Amount of speed lost by sec
+    public float dodgeBoost = 2f; // Speed boost made by dodging
+    public float horizontalCorrectionSpeed = 10f; // speed of correction, in degree/s
 
     public Vector3 angularSpeed = new Vector3(2f, 2f, 2f); // amount of rotation made by s
-    public Vector3 motion; // forward momemtum
+    Vector3 motion; // Speed & direction of motion
 
     // Debug purpose
-    float accel;
-    float deccel;
     Vector3 forwardVector; // debug purpose
     Vector3 rotation; // pitch / heading / roll
 
@@ -45,6 +45,13 @@ public class FlyController : MonoBehaviour {
         {
             transform.Rotate(rotation.z * Vector3.Scale(Vector3.forward, angularSpeed) * Time.deltaTime);
         }
+        else
+        {
+            // Automatically return back to horizontal
+            Vector3 currentRotation = transform.eulerAngles;
+            currentRotation.z = Mathf.MoveTowardsAngle(currentRotation.z, 0, horizontalCorrectionSpeed * Time.deltaTime);
+            transform.eulerAngles = currentRotation;
+        }
     }
 
     void    ForwardMotion   ()
@@ -52,15 +59,20 @@ public class FlyController : MonoBehaviour {
         // Natural decceleration
         motion = motion * (1f - deccelerationCoef * Time.deltaTime);
 
-        // Acceleration
-        if ((accel = Input.GetAxis("Throttle")) > 0.01f)
+        // Maintain "A" to acccelerate
+        if(Input.GetButton("Throttle"))
         {
-            motion += transform.forward * accel * accelerationCoef * Time.deltaTime;
+            motion += transform.forward * accelerationCoef * Time.deltaTime;
         }
-        // Manual decceleration
-        else if ((deccel = Input.GetAxis("Throttle")) < -0.01f)
+
+        // Use "B" to make a dodge upward and &Xé to make it downward
+        if(Input.GetButton("DodgeUp"))
         {
-            motion += transform.forward * deccel * accelerationCoef * Time.deltaTime;
+            motion += transform.up * dodgeBoost;
+        }
+        else if(Input.GetButton("DodgeDown"))
+        {
+            motion += -transform.up * dodgeBoost;
         }
 
         // Make sure we can't go backward & faster than max speed
