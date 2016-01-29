@@ -1,0 +1,36 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+*.txt	text
+
+*.cmake	text
+*.in	text
+
+*.cpp	text
+*.cxx	text
+*.h		text
+*.hpp	text
+*.rc	text
+*.i		text 
+*.cs	text diff=csharp
+*.xaml	text
+*.xml	text
+*.html	text diff=html
+*.css	text
+*.js	text
+
+*.meta	text eol=lf
+
+*.cmd	text eol=crlf
+*.bat	text eol=crlf
+
+# Visual studio specific
+*.dsp		text eol=crlf
+*.dsw		text eol=crlf
+*.sln		text eol=crlf merge=union
+*.csproj	text eol=crlf merge=union
+*.vbproj	text eol=crlf merge=union
+*.fsproj	text eol=crlf merge=union
+*.dbproj	text eol=crlf merge=union
+*.config	text eol=crlf
+
