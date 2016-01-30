@@ -7,8 +7,8 @@ using System.Collections;
 
 public class SICameraCreator : SICameraBase {
 	public bool setClippingPlanes = true;
-	public float nearCllipingPlane = 0.1f;
-	public float farCllipingPlane = 1000f;
+	public float nearClippingPlane = 0.1f;
+	public float farClippingPlane = 1000f;
 	public bool copyComponents = false;
 	protected bool forceUpdateParameters = false;//debug code;
 	
@@ -29,8 +29,8 @@ public class SICameraCreator : SICameraBase {
 		cam.aspect = 1f;
 		cam.fieldOfView = fov;
 		if(setClippingPlanes) {
-			cam.nearClipPlane = nearCllipingPlane;
-			cam.farClipPlane = farCllipingPlane;
+			cam.nearClipPlane = nearClippingPlane;
+			cam.farClipPlane = farClippingPlane;
 		}
 		cam.backgroundColor = base.parentCamera.backgroundColor;
 		cam.rect = new Rect(0f, 0f, 1f, 1f);
