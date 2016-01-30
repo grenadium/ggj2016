@@ -6,10 +6,28 @@ ModelImporter:
   serializedVersion: 19
   fileIDToRecycleName:
     100000: //RootNode
+    100002: pivot_1
+    100004: pivot_2
+    100006: pivot_3
+    100008: pivot_4
+    100010: pivot_5
+    100012: tapette_01
+    100014: tapette_01_root
     400000: //RootNode
+    400002: pivot_1
+    400004: pivot_2
+    400006: pivot_3
+    400008: pivot_4
+    400010: pivot_5
+    400012: tapette_01
+    400014: tapette_01_root
     2300000: //RootNode
+    2300002: tapette_01
     3300000: //RootNode
+    3300002: tapette_01
     4300000: tapette_01
+    11100000: //RootNode
+    13700000: tapette_01
   materials:
     importMaterials: 1
     materialName: 0
@@ -68,7 +86,7 @@ ModelImporter:
     rootMotionBoneName: 
     hasTranslationDoF: 0
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  animationType: 0
+  animationType: 1
   humanoidOversampling: 1
   additionalBone: 0
   userData: 
