@@ -26,6 +26,7 @@ public class GameManager : MonoBehaviour
     {
         var networkManagerObject = Instantiate(NetworkManagerPrefab, Vector3.zero, Quaternion.identity) as GameObject;
         if (!networkManagerObject) return;
+        networkManagerObject.name = "NetworkManager";
 
         var networkManagerScript = networkManagerObject.GetComponent<NetworkManager>();
         if (!networkManagerScript) return;
@@ -36,9 +37,12 @@ public class GameManager : MonoBehaviour
             vrManagerPrefabScript.ShowWand = false;
             vrManagerPrefabScript.UseVRMenu = false;
             vrManagerPrefabScript.ConfigFile = DefaultHumanConfig;
+            vrManagerPrefabScript.Navigation = VRManagerScript.ENavigation.None;
+            vrManagerPrefabScript.Manipulation = VRManagerScript.EManipulation.None;
 
             var vrManagerObject = Instantiate(VrManagerPrefab, Vector3.zero, Quaternion.identity) as GameObject;
             if (vrManagerObject == null) return;
+            vrManagerObject.name = "VRManager";
 
             networkManagerScript.StartHost();
             if (!VrManagerPrefab) return;
