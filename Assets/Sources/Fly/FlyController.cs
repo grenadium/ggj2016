@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
-public class FlyController : MonoBehaviour {
+public class FlyController : NetworkBehaviour {
 
     [System.Serializable]
     public class ControllerMappings
@@ -73,9 +74,8 @@ public class FlyController : MonoBehaviour {
     public float dodgeBoost = 12f; // Speed boost made by takeoff
 
     private Rigidbody flyBody;
-
-    // Sound
     private AudioSource flyAudio;
+    private GameObject lastCollidedObject;
 
     // Debug purpose
     Vector3 forwardVector; // debug purpose
@@ -89,8 +89,37 @@ public class FlyController : MonoBehaviour {
         worldScale = world.transform.localScale.x; // We suppose scaling is uniform
     }
 
+    [Command]
+    void CmdSetSpeed (float speed)
+    {
+        RpcSetSpeed(speed);
+    }
+
+    [Command]
+    void CmdSetSoundVolume(float volume)
+    {
+        RpcSetVolume(volume);
+    }
+
+    [ClientRpc]
+    public void RpcSetSpeed (float speed)
+    {
+        // Sound is based on speed
+        flyAudio.pitch = Mathf.Lerp(1, 2, speed / (tweakingThrottleSpeed * maxSpeed * worldScale));
+        flyAudio.volume = Mathf.Lerp(0.5f, 1, forwardSpeed.magnitude / (tweakingThrottleSpeed * maxSpeed * worldScale));
+    }
+
+    [ClientRpc]
+    public void RpcSetVolume (float volume)
+    {
+        flyAudio.volume = volume;
+    }
+
 	void Update ()
     {
+        if (!hasAuthority)
+            return;
+
         switch(flyState)
         {
             case FlyState.LANDING:
@@ -99,8 +128,8 @@ public class FlyController : MonoBehaviour {
                     if((Time.realtimeSinceStartup - timeOfLanding) / landingTime >= 1)
                     {
                         flyState = FlyState.LANDED;
-                        flyAudio.Stop();
-                        flyAudio.loop = false;
+                        flyAudio.volume = 0f;
+                        CmdSetSoundVolume(0f);
                         transform.rotation = rotationForLanding * rotationOriginal;
                     }
                 }
@@ -125,12 +154,26 @@ public class FlyController : MonoBehaviour {
                     if ((Time.realtimeSinceStartup - timeOfTakingOff) / takingOffDelay >= 1)
                     {
                         flyState = FlyState.FLYING;
+                        flyAudio.volume = 0.5f;
+                        CmdSetSoundVolume(0.5f);
+                        lastCollidedObject = null;
                     }
                 }
                 break;
 
-            case FlyState.LANDED:
             case FlyState.FLYING:
+                {
+                    LateralMotion(); // Computes angular motion
+                    ForwardMotion(); // Computes speed modifcation
+                    flyAudio.pitch = Mathf.Lerp(1, 2, forwardSpeed.magnitude / (tweakingThrottleSpeed * maxSpeed * worldScale));
+                    flyAudio.volume = Mathf.Lerp(0.5f, 1, forwardSpeed.magnitude / (tweakingThrottleSpeed * maxSpeed * worldScale));
+
+                    // Transmit fly speed to server
+                    CmdSetSpeed(forwardSpeed.magnitude);
+                }
+                break;
+
+            case FlyState.LANDED:
                 {
                     LateralMotion(); // Computes angular motion
                     ForwardMotion(); // Computes speed modifcation
@@ -143,6 +186,7 @@ public class FlyController : MonoBehaviour {
                     if ((Time.realtimeSinceStartup - timeOfStun) / stunDuration >= 1)
                     {
                         flyState = FlyState.FLYING;
+                        lastCollidedObject = null;
                     }
                 }
                 break;
@@ -215,8 +259,6 @@ public class FlyController : MonoBehaviour {
             if(flyState == FlyState.LANDED)
             {
                 flyState = FlyState.TAKINGOFF;
-                flyAudio.Play();
-                flyAudio.loop = true;
             }
             else
             {
@@ -251,10 +293,13 @@ public class FlyController : MonoBehaviour {
     void    OnCollisionEnter (Collision collision)
     {
         // Walls & other obstacles
-        if (collision.gameObject.layer == LayerMask.NameToLayer("GraspableObject") 
-            && flyState == FlyState.FLYING 
+        if (flyState == FlyState.FLYING
+            && collision.gameObject.layer == LayerMask.NameToLayer("GraspableObject") 
+            && collision.gameObject != lastCollidedObject
             && (Time.realtimeSinceStartup - lastRequestedLanding) / delayBetweenTriggerAndLanding < 1)
         {
+            lastCollidedObject = collision.gameObject;
+
             flyState = FlyState.LANDING;
             timeOfLanding = Time.realtimeSinceStartup;
 
@@ -269,16 +314,17 @@ public class FlyController : MonoBehaviour {
             rotationOriginal = transform.rotation;
             landingNormal = collision.contacts[0].normal;
             rotationForLanding = Quaternion.FromToRotation(transform.up, landingNormal);
-
-            transform.Translate(landingNormal.normalized * 0.04f);
         }
-        else if (flyState != FlyState.LANDED && flyState != FlyState.STUNNED)
+        else if (flyState != FlyState.LANDED 
+            && flyState != FlyState.STUNNED)
         {
+            lastCollidedObject = collision.gameObject;
+
             flyState = FlyState.STUNNED;
             timeOfStun = Time.realtimeSinceStartup;
 
             // Bouncing motion
-            forwardSpeed = Vector3.Reflect(-collision.relativeVelocity * worldScale, collision.contacts[0].normal);
+            forwardSpeed = Vector3.Reflect(-collision.relativeVelocity * worldScale * 0.5f, collision.contacts[0].normal);
         }
         else if (
                 (flyState == FlyState.LANDED && collision.gameObject.layer == LayerMask.NameToLayer("Tapette")) // Crushed on the wall
@@ -286,8 +332,8 @@ public class FlyController : MonoBehaviour {
                 )
         {
             flyState = FlyState.DEAD;
-            flyAudio.loop = false;
-            flyAudio.Stop();
+            flyAudio.volume = 0;
+            CmdSetSoundVolume(0);
         }
 
     }
@@ -297,8 +343,10 @@ public class FlyController : MonoBehaviour {
         if(flyState == FlyState.LANDED)
         {
             flyState = FlyState.FLYING;
-            flyAudio.loop = true;
-            flyAudio.Play();
+            flyAudio.volume = 0.5f;
+            CmdSetSoundVolume(0.5f);
+
+            lastCollidedObject = null;
         }
     }
     #endregion
