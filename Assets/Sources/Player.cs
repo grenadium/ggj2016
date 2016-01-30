@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Linq;
 using UnityEngine.Networking;
 
-public class PlayerScript : NetworkBehaviour
+public class Player : NetworkBehaviour
 {
     public enum PlayerType
     {
@@ -29,22 +30,13 @@ public class PlayerScript : NetworkBehaviour
     [Command]
     public void CmdSpawnFly()
     {
-        GameObject humanHead = Instantiate(m_FlyPrefab, Vector3.zero, Quaternion.identity) as GameObject;
+        var humanHead = Instantiate(m_FlyPrefab, Vector3.zero, Quaternion.identity) as GameObject;
         NetworkServer.SpawnWithClientAuthority(humanHead, connectionToClient);
     }
 
     public static PlayerType DetectPlayerType()
     {
-        vrDeviceManager deviceMgr = MiddleVR.VRDeviceMgr;
-        if (MiddleVR.VRDeviceMgr.GetTrackersNb() >= 2)
-        {
-            // We have a non-default configuration with at least 2 trackers
-            return PlayerType.Human;
-        }
-        else
-        {
-            return PlayerType.Fly;
-        }
+        return System.Environment.GetCommandLineArgs().Any(arg => arg == "--config") ? PlayerType.Human : PlayerType.Fly;
     }
 
     // Use this for initialization
@@ -63,9 +55,4 @@ public class PlayerScript : NetworkBehaviour
             CmdSpawnFly();
         }
     }
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
 }
