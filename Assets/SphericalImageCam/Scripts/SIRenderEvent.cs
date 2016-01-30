@@ -25,6 +25,14 @@ class SIRenderEvent : MonoBehaviour {
 		
 		Graphics.Blit (source, destination, material);
 	}
+
+    public void FixRendering ()
+    {
+        material.SetFloat("_fov", ref_camera.fieldOfView);
+        material.SetVector("_forward", transform.forward);
+        material.SetVector("_right", transform.right);
+        material.SetVector("_up", transform.up);
+    }
 	
 	void OnDestroy() {
 		DestroyImmediate(material);

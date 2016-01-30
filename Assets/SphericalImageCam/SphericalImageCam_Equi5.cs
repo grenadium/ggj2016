@@ -9,20 +9,23 @@ public class SphericalImageCam_Equi5 : SICameraCreator {
 	private float[] ds = {-0.5f, -0.5f, 0f, 0f, 0f};
 
 	public bool drawImageOnGUI = true;
+
+    private GameObject[] cameras;
 	
 	void Start () {
 		base.InitShader("Hidden/EquirectangularShader");
 
 		Quaternion temp = gameObject.transform.rotation;
 		gameObject.transform.rotation = new Quaternion();
-		
+
+        cameras = new GameObject[5];
 		for (int i = 0; i < 5; i++) {
 			float rotX, rotY;
 			float fov = 120.0f;
 			rotX = rots[i*2];
 			rotY = rots[i*2+1];
 
-			CreateCamera(new Vector3(rotX, rotY, 0f), fov, ds[i], "camera" + i.ToString());
+            cameras[i] = CreateCamera(new Vector3(rotX, rotY, 0f), fov, ds[i], "camera" + i.ToString());
 		}
 
 		if (drawImageOnGUI) {
@@ -31,7 +34,17 @@ public class SphericalImageCam_Equi5 : SICameraCreator {
 			main.farClipPlane = 0.02f;
 		}
 		gameObject.transform.rotation = temp;
+
+        Invoke("RepairCameraRendering", 0.2f);
 	}
+
+    void RepairCameraRendering ()
+    {
+        foreach(GameObject cam in cameras)
+        {
+            cam.GetComponent<SIRenderEvent>().FixRendering();
+        }
+    }
 
 	void OnGUI () {
 		if (base.canDraw && drawImageOnGUI) {
