@@ -42,7 +42,7 @@ public class TapetteScript : MonoBehaviour {
             float sumVelo = 0;
             for(int i = 0; i < velocities.Count;i++)
             {
-                sumVelo += velocities[i] * weightCorrection;
+                sumVelo += velocities[i];
             }
 
             currentVelocity = sumVelo / nbFramesForVelocity;
@@ -68,6 +68,7 @@ public class TapetteScript : MonoBehaviour {
 
         else if(col.gameObject.tag == GlobalVariables.T_WINDOW)
         {
+            Debug.Log("fenetre touchee");
             col.gameObject.GetComponent<WindowScript>().changeWindowState();
         }
     }
