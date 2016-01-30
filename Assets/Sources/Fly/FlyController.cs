@@ -73,6 +73,10 @@ public class FlyController : NetworkBehaviour {
     public float takingOffDelay = 0.5f;
     public float dodgeBoost = 12f; // Speed boost made by takeoff
 
+    // Audio
+    public AudioClip deathSound;
+    public AudioClip buzzSound;
+
     private Rigidbody flyBody;
     private AudioSource flyAudio;
     private GameObject lastCollidedObject;
@@ -80,6 +84,8 @@ public class FlyController : NetworkBehaviour {
     // Debug purpose
     Vector3 forwardVector; // debug purpose
     Vector3 rotation; // pitch / heading / roll
+
+    #region Monobehaviour callbacks
 
     void Start ()
     {
@@ -89,33 +95,7 @@ public class FlyController : NetworkBehaviour {
         worldScale = world.transform.localScale.x; // We suppose scaling is uniform
     }
 
-    [Command]
-    void CmdSetSpeed (float speed)
-    {
-        RpcSetSpeed(speed);
-    }
-
-    [Command]
-    void CmdSetSoundVolume(float volume)
-    {
-        RpcSetVolume(volume);
-    }
-
-    [ClientRpc]
-    public void RpcSetSpeed (float speed)
-    {
-        // Sound is based on speed
-        flyAudio.pitch = Mathf.Lerp(1, 2, speed / (tweakingThrottleSpeed * maxSpeed * worldScale));
-        flyAudio.volume = Mathf.Lerp(0.5f, 1, forwardSpeed.magnitude / (tweakingThrottleSpeed * maxSpeed * worldScale));
-    }
-
-    [ClientRpc]
-    public void RpcSetVolume (float volume)
-    {
-        flyAudio.volume = volume;
-    }
-
-	void Update ()
+    void Update ()
     {
         if (!hasAuthority)
             return;
@@ -198,8 +178,9 @@ public class FlyController : NetworkBehaviour {
         forwardVector = transform.forward;
 	}
 
-    #region Navigation
+    #endregion
 
+    #region Navigation
     void    LateralMotion  ()
     {
         // Y axis rotation
@@ -289,7 +270,6 @@ public class FlyController : NetworkBehaviour {
     #endregion
 
     #region Collision
-
     void    OnCollisionEnter (Collision collision)
     {
         // Walls & other obstacles
@@ -331,9 +311,15 @@ public class FlyController : NetworkBehaviour {
                 || (flyState == FlyState.STUNNED && forwardSpeed.magnitude > 0.5f) // Thrown against the wall
                 )
         {
-            flyState = FlyState.DEAD;
+            // Buzzing sound volume
             flyAudio.volume = 0;
             CmdSetSoundVolume(0);
+
+            // Death sound
+            CmdSetDeathSound();
+            AudioSource.PlayClipAtPoint(deathSound, collision.contacts[0].point, 1);
+
+            flyState = FlyState.DEAD;
         }
 
     }
@@ -349,5 +335,47 @@ public class FlyController : NetworkBehaviour {
             lastCollidedObject = null;
         }
     }
+    #endregion
+
+    #region Network
+
+    [Command]
+    void CmdSetSpeed(float speed)
+    {
+        RpcSetSpeed(speed);
+    }
+
+    [Command]
+    void CmdSetSoundVolume(float volume)
+    {
+        RpcSetVolume(volume);
+    }
+
+    [Command]
+    void CmdSetDeathSound()
+    {
+        RpcSetDeathSound();
+    }
+
+    [ClientRpc]
+    public void RpcSetSpeed(float speed)
+    {
+        // Sound is based on speed
+        flyAudio.pitch = Mathf.Lerp(1, 2, speed / (tweakingThrottleSpeed * maxSpeed * worldScale));
+        flyAudio.volume = Mathf.Lerp(0.5f, 1, forwardSpeed.magnitude / (tweakingThrottleSpeed * maxSpeed * worldScale));
+    }
+
+    [ClientRpc]
+    public void RpcSetVolume(float volume)
+    {
+        flyAudio.volume = volume;
+    }
+
+    [ClientRpc]
+    public void RpcSetDeathSound()
+    {
+        AudioSource.PlayClipAtPoint(deathSound, transform.position, 1);
+    }
+
     #endregion
 }
