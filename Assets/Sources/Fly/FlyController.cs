@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
-public class FlyController : MonoBehaviour {
+public class FlyController : NetworkBehaviour {
 
     [System.Serializable]
     public class ControllerMappings
@@ -89,8 +90,36 @@ public class FlyController : MonoBehaviour {
         worldScale = world.transform.localScale.x; // We suppose scaling is uniform
     }
 
+    [Command]
+    void CmdSetSpeed (float speed)
+    {
+        RpcSetSpeed(speed);
+    }
+
+    [Command]
+    void CmdSetSoundVolume(float volume)
+    {
+        RpcSetVolume(volume);
+    }
+
+    [ClientRpc]
+    public void RpcSetSpeed (float speed)
+    {
+        // Sound is based on speed
+        flyAudio.pitch = Mathf.Lerp(1, 2, forwardSpeed.magnitude / (tweakingThrottleSpeed * maxSpeed * worldScale));
+    }
+
+    [ClientRpc]
+    public void RpcSetVolume (float volume)
+    {
+        flyAudio.volume = volume;
+    }
+
 	void Update ()
     {
+        if (!hasAuthority)
+            return;
+
         switch(flyState)
         {
             case FlyState.LANDING:
@@ -99,8 +128,8 @@ public class FlyController : MonoBehaviour {
                     if((Time.realtimeSinceStartup - timeOfLanding) / landingTime >= 1)
                     {
                         flyState = FlyState.LANDED;
-                        flyAudio.Stop();
-                        flyAudio.loop = false;
+                        flyAudio.volume = 0f;
+                        CmdSetSoundVolume(0f);
                         transform.rotation = rotationForLanding * rotationOriginal;
                     }
                 }
@@ -125,6 +154,8 @@ public class FlyController : MonoBehaviour {
                     if ((Time.realtimeSinceStartup - timeOfTakingOff) / takingOffDelay >= 1)
                     {
                         flyState = FlyState.FLYING;
+                        flyAudio.volume = 1f;
+                        CmdSetSoundVolume(1f);
                     }
                 }
                 break;
@@ -134,6 +165,9 @@ public class FlyController : MonoBehaviour {
                 {
                     LateralMotion(); // Computes angular motion
                     ForwardMotion(); // Computes speed modifcation
+
+                    // Sound is based on speed
+                    flyAudio.pitch = Mathf.Lerp(1, 2, forwardSpeed.magnitude / (tweakingThrottleSpeed * maxSpeed * worldScale));
                 }
                 break;
 
@@ -152,6 +186,9 @@ public class FlyController : MonoBehaviour {
         PhysicalMotion(); // Apply speed to physical world
 
         forwardVector = transform.forward;
+
+        // Transmit fly speed to server
+        CmdSetSpeed(forwardSpeed.magnitude);
 	}
 
     #region Navigation
@@ -215,8 +252,6 @@ public class FlyController : MonoBehaviour {
             if(flyState == FlyState.LANDED)
             {
                 flyState = FlyState.TAKINGOFF;
-                flyAudio.Play();
-                flyAudio.loop = true;
             }
             else
             {
@@ -278,7 +313,7 @@ public class FlyController : MonoBehaviour {
             timeOfStun = Time.realtimeSinceStartup;
 
             // Bouncing motion
-            forwardSpeed = Vector3.Reflect(-collision.relativeVelocity * worldScale, collision.contacts[0].normal);
+            forwardSpeed = Vector3.Reflect(-collision.relativeVelocity * worldScale * 0.5f, collision.contacts[0].normal);
         }
         else if (
                 (flyState == FlyState.LANDED && collision.gameObject.layer == LayerMask.NameToLayer("Tapette")) // Crushed on the wall
@@ -286,8 +321,8 @@ public class FlyController : MonoBehaviour {
                 )
         {
             flyState = FlyState.DEAD;
-            flyAudio.loop = false;
-            flyAudio.Stop();
+            flyAudio.volume = 0;
+            CmdSetSoundVolume(0);
         }
 
     }
@@ -297,8 +332,8 @@ public class FlyController : MonoBehaviour {
         if(flyState == FlyState.LANDED)
         {
             flyState = FlyState.FLYING;
-            flyAudio.loop = true;
-            flyAudio.Play();
+            flyAudio.volume = 1;
+            CmdSetSoundVolume(1);
         }
     }
     #endregion
