@@ -296,7 +296,8 @@ public class FlyController : NetworkBehaviour {
             rotationForLanding = Quaternion.FromToRotation(transform.up, landingNormal);
         }
         else if (flyState != FlyState.LANDED 
-            && flyState != FlyState.STUNNED)
+            && flyState != FlyState.STUNNED
+            && flyState != FlyState.DEAD)
         {
             lastCollidedObject = collision.gameObject;
 
@@ -308,7 +309,7 @@ public class FlyController : NetworkBehaviour {
         }
         else if (
                 (flyState == FlyState.LANDED && collision.gameObject.layer == LayerMask.NameToLayer("Tapette")) // Crushed on the wall
-                || (flyState == FlyState.STUNNED && forwardSpeed.magnitude > 0.5f) // Thrown against the wall
+                || (flyState == FlyState.STUNNED && lastCollidedObject.layer == LayerMask.NameToLayer("Tapette")) // Thrown against the wall
                 )
         {
             // Buzzing sound volume

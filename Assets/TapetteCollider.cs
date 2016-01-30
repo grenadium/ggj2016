@@ -7,6 +7,7 @@ public class TapetteCollider : MonoBehaviour {
 
     void OnCollisionEnter (Collision collision)
     {
-        owner.Slap(collision.contacts[0].point);
+        if(owner != null)
+            owner.Slap(collision.contacts[0].point);
     }
 }
