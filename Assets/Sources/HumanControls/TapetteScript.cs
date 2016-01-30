@@ -86,9 +86,8 @@ public class TapetteScript : MonoBehaviour {
                 particleSystem.transform.position = this.transform.position;
                 Destroy(particleSystem, 0.5f);
 
-                //Activer la texture de confiture
-                GameObject jamSpill = col.gameObject.transform.FindChild("JamTexture").gameObject;
-                jamSpill.transform.parent = null;
+                //Créer la texture de confiture
+                GameObject jamSpill = (GameObject)Instantiate(Resources.Load("Prefabs/JamSpill"));
                 jamSpill.GetComponent<MeshRenderer>().enabled = true;
 
                 RaycastHit hit;
@@ -100,7 +99,7 @@ public class TapetteScript : MonoBehaviour {
 
                     float yRotation = Random.Range(0f, 360f); //rotation aléatoire sur y
 
-                    jamSpill.transform.Rotate(new Vector3(0f, yRotation, 0f));
+                    jamSpill.transform.Rotate(Vector3.up, yRotation);
                 }
 
                 Destroy(col.gameObject);
