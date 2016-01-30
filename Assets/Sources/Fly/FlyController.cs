@@ -15,8 +15,12 @@ public class FlyController : MonoBehaviour {
 
     public float accelerationCoef = 2 * 9.8f; // Amount of speed gained by sec (approximately twice the acceleration of gravity)
     public float deccelerationCoef = 0.1f; // Amount of speed lost by sec
-    public float dodgeBoost = 2f; // Speed boost made by dodging
-    public float horizontalCorrectionSpeed = 10f; // speed of correction, in degree/s
+
+    private float timeOfDodge = 0f; // 
+    public Vector3 dodgeBoost = new Vector3(2f, 2f, 2f); // Speed boost made by dodging
+
+    public bool enableStabilization = false; // We might want more control
+    public Vector3 angularStabilizationSpeed = new Vector3(2f,2f,2f); // speed of correction, in degree/s, for each axis.
 
     public Vector3 angularCorrection = new Vector3(0.5f, 0.5f, 0.5f); // Just to make it playable
     public Vector3 maxAngularSpeed = new Vector3(2160f, 2160f, 2160f); // Yes, that is the top angular speed of a housefly, 6 x 360 turns in 1 second
@@ -62,22 +66,23 @@ public class FlyController : MonoBehaviour {
         {
             transform.Rotate(rotation.x * Vector3.Scale(Vector3.right, Vector3.Scale(maxAngularSpeed, angularCorrection)) * speedCorrection * Time.deltaTime);
         }
-
         if ((rotation.y = Input.GetAxis("Heading")) > sensibility || rotation.y < -sensibility)
         {
             transform.Rotate(rotation.y * Vector3.Scale(Vector3.up, Vector3.Scale(maxAngularSpeed,angularCorrection)) * speedCorrection * Time.deltaTime);
         }
-
         if ((rotation.z = Input.GetAxis("Roll")) > sensibility || rotation.z < -sensibility)
         {
             transform.Rotate(rotation.z * Vector3.Scale(Vector3.forward, Vector3.Scale(maxAngularSpeed, angularCorrection)) * speedCorrection * Time.deltaTime);
         }
-        else
+        else if (enableStabilization)
         {
             // Automatically return back to horizontal to ease things up
-            Vector3 currentRotation = transform.eulerAngles;
-            currentRotation.z = Mathf.MoveTowardsAngle(currentRotation.z, 0, horizontalCorrectionSpeed * Time.deltaTime);
-            transform.eulerAngles = currentRotation;
+            //Vector3 currentRotation = transform.eulerAngles;
+            //currentRotation.z = Mathf.MoveTowardsAngle(currentRotation.z, 0, horizontalCorrectionSpeed * Time.deltaTime);
+            //transform.eulerAngles = currentRotation;
+
+            // Multi-axis rotation
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.identity, angularStabilizationSpeed.x * Time.deltaTime);
         }
     }
 
@@ -87,19 +92,28 @@ public class FlyController : MonoBehaviour {
         motion = motion * (1f - deccelerationCoef * worldScale * Time.deltaTime);
 
         // Maintain "A" to acccelerate
-        if(Input.GetButton("Throttle"))
+        float throttle = 0f;
+        if ((throttle = Input.GetAxis("Throttle")) > sensibility || throttle < -sensibility)
         {
-            motion += transform.forward * accelerationCoef * worldScale * Time.deltaTime;
+            motion += throttle * transform.forward * accelerationCoef * worldScale * Time.deltaTime;
         }
 
         // Use "B" to make a dodge upward and & X to make it downward
         if(Input.GetButton("DodgeUp"))
         {
-            motion += transform.up * dodgeBoost * worldScale;
+            motion += Vector3.Scale(transform.up,dodgeBoost) * worldScale;
         }
         else if(Input.GetButton("DodgeDown"))
         {
-            motion += -transform.up * dodgeBoost * worldScale;
+            motion += -Vector3.Scale(transform.up, dodgeBoost) * worldScale;
+        }
+        else if (Input.GetButton("DodgeLeft"))
+        {
+            motion += -Vector3.Scale(transform.right, dodgeBoost) * worldScale;
+        }
+        else if (Input.GetButton("DodgeRight"))
+        {
+            motion += Vector3.Scale(transform.right, dodgeBoost) * worldScale;
         }
 
         // Make sure we can't go backward & faster than max speed
@@ -123,7 +137,9 @@ public class FlyController : MonoBehaviour {
     {
         isStunned = true;
         timeOfStun = Time.realtimeSinceStartup;
-        motion = collision.relativeVelocity;
+
+        // Bouncing motion
+        motion = Vector3.Reflect(-collision.relativeVelocity,collision.contacts[0].normal);
     }
 
     #endregion
