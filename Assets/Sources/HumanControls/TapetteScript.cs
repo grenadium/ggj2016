@@ -9,9 +9,7 @@ public class TapetteScript : MonoBehaviour {
 
     public float minimumKillSpeed; //Vitesse minimale pour considerer que la tapette tue la mouche
     public float minimumJamBreakSpeed; //vitesse mini pour casser le pot de confiture
-    public float minimumSoundSpeed; //vitesse mini pour jouer un son de swing
-    private int totalFrames;
-
+    public float repulsionForce; // force pour repousser la mouche
     public float currentVelocity;
     public int nbFramesForVelocity = 5; //nombre de frames à prendre en compte pour le calcul de la vélocité (plus il y a de frames, plus le mouvement doit être grand)
     private float weightCorrection = 1.2f;
@@ -19,21 +17,16 @@ public class TapetteScript : MonoBehaviour {
     private List<float> velocities; //velocite de la tapette durant les frames precedentes
     private Vector3 lastPosition;
 
-    private AudioSource audioSource;
-    public List<AudioClip> swingSounds, jamBreakSounds;
-
 	// Use this for initialization
 	void Start () {
         velocities = new List<float>();
         currentFrame = 0;
         lastPosition = transform.position;
-
-        audioSource = gameObject.GetComponent<AudioSource>() as AudioSource;
-
-    }
+	
+	}
 	
 	// Update is called once per frame
-	void FixedUpdate () {
+	void Update () {
 
         if (currentFrame < nbFramesForVelocity)
         {
@@ -55,18 +48,11 @@ public class TapetteScript : MonoBehaviour {
 
             currentVelocity = sumVelo / nbFramesForVelocity;
 
-            //Play a swing sound (total frames > 30 car le son se joue dès le début même sans faire de mouvements... fix à revoir)
-            if (totalFrames > 30 && currentVelocity >= minimumSoundSpeed)
-            {
-                playRandomSoundInList(swingSounds);
-            }
-                
 
             velocities.Clear();
             currentFrame = 0;
         }
-
-        totalFrames++;
+	
 	}
 
     void OnCollisionEnter(Collision col)
@@ -96,35 +82,29 @@ public class TapetteScript : MonoBehaviour {
 
             if(canBreakJamPot())
             {
-                playRandomSoundInList(jamBreakSounds);
-
                 GameObject particleSystem = (GameObject)Instantiate(Resources.Load("Prefabs/JamSpurt"));
                 particleSystem.transform.position = this.transform.position;
                 Destroy(particleSystem, 0.5f);
 
                 //Créer la texture de confiture
-                GameObject jamSpillZone = (GameObject)Instantiate(Resources.Load("Prefabs/JamTexture"));
-                //jamSpillZone.GetComponent<MeshRenderer>().enabled = true;
-
-                GameObject jamSprite = (GameObject)Instantiate(Resources.Load("Prefabs/JamSprite"));
+                GameObject jamSpill = (GameObject)Instantiate(Resources.Load("Prefabs/JamTexture"));
+                jamSpill.GetComponent<MeshRenderer>().enabled = true;
 
                 RaycastHit hit;
 
                 //Placer la texture confiture en dessous du pot
                 if (Physics.Raycast(col.gameObject.transform.position, -Vector3.up, out hit))
                 {
-                    jamSpillZone.transform.position = hit.point;
-                    jamSprite.transform.position = new Vector3(hit.point.x, hit.point.y+0.01f, hit.point.z);
+                    jamSpill.transform.position = hit.point;
 
                     float yRotation = Random.Range(0f, 360f); //rotation aléatoire sur y
 
-                    jamSpillZone.transform.Rotate(Vector3.up, yRotation);
-                    jamSpillZone.transform.Rotate(Vector3.up, yRotation);
+                    jamSpill.transform.Rotate(Vector3.up, yRotation);
                 }
 
                 Destroy(col.gameObject);
-                jamSpillZone.AddComponent<JamScript>();
-                jamSpillZone.GetComponent<JamScript>().lifeTime = GlobalVariables.JAM_LIFE_TIME;
+                jamSpill.AddComponent<JamScript>();
+                jamSpill.GetComponent<JamScript>().lifeTime = GlobalVariables.JAM_LIFE_TIME;
             }
             
         }
@@ -163,18 +143,6 @@ public class TapetteScript : MonoBehaviour {
         }
 
         return false;
-    }
-
-    
-	 //Méthode qui permet de jouer un son aléatoire dans une liste
-    public void playRandomSoundInList(List<AudioClip> list)
-    {
-        int randIndex = Random.Range(0, list.Count);
-        audioSource.clip = list[randIndex];
-
-        if (!audioSource.isPlaying)
-         audioSource.Play();
-
     }
 
 }
