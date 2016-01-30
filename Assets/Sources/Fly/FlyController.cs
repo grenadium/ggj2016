@@ -74,9 +74,8 @@ public class FlyController : NetworkBehaviour {
     public float dodgeBoost = 12f; // Speed boost made by takeoff
 
     private Rigidbody flyBody;
-
-    // Sound
     private AudioSource flyAudio;
+    private GameObject lastCollidedObject;
 
     // Debug purpose
     Vector3 forwardVector; // debug purpose
@@ -106,7 +105,8 @@ public class FlyController : NetworkBehaviour {
     public void RpcSetSpeed (float speed)
     {
         // Sound is based on speed
-        flyAudio.pitch = Mathf.Lerp(1, 2, forwardSpeed.magnitude / (tweakingThrottleSpeed * maxSpeed * worldScale));
+        flyAudio.pitch = Mathf.Lerp(1, 2, speed / (tweakingThrottleSpeed * maxSpeed * worldScale));
+        flyAudio.volume = Mathf.Lerp(0.5f, 1, forwardSpeed.magnitude / (tweakingThrottleSpeed * maxSpeed * worldScale));
     }
 
     [ClientRpc]
@@ -154,20 +154,29 @@ public class FlyController : NetworkBehaviour {
                     if ((Time.realtimeSinceStartup - timeOfTakingOff) / takingOffDelay >= 1)
                     {
                         flyState = FlyState.FLYING;
-                        flyAudio.volume = 1f;
-                        CmdSetSoundVolume(1f);
+                        flyAudio.volume = 0.5f;
+                        CmdSetSoundVolume(0.5f);
+                        lastCollidedObject = null;
                     }
                 }
                 break;
 
-            case FlyState.LANDED:
             case FlyState.FLYING:
                 {
                     LateralMotion(); // Computes angular motion
                     ForwardMotion(); // Computes speed modifcation
-
-                    // Sound is based on speed
                     flyAudio.pitch = Mathf.Lerp(1, 2, forwardSpeed.magnitude / (tweakingThrottleSpeed * maxSpeed * worldScale));
+                    flyAudio.volume = Mathf.Lerp(0.5f, 1, forwardSpeed.magnitude / (tweakingThrottleSpeed * maxSpeed * worldScale));
+
+                    // Transmit fly speed to server
+                    CmdSetSpeed(forwardSpeed.magnitude);
+                }
+                break;
+
+            case FlyState.LANDED:
+                {
+                    LateralMotion(); // Computes angular motion
+                    ForwardMotion(); // Computes speed modifcation
                 }
                 break;
 
@@ -177,6 +186,7 @@ public class FlyController : NetworkBehaviour {
                     if ((Time.realtimeSinceStartup - timeOfStun) / stunDuration >= 1)
                     {
                         flyState = FlyState.FLYING;
+                        lastCollidedObject = null;
                     }
                 }
                 break;
@@ -186,9 +196,6 @@ public class FlyController : NetworkBehaviour {
         PhysicalMotion(); // Apply speed to physical world
 
         forwardVector = transform.forward;
-
-        // Transmit fly speed to server
-        CmdSetSpeed(forwardSpeed.magnitude);
 	}
 
     #region Navigation
@@ -286,10 +293,13 @@ public class FlyController : NetworkBehaviour {
     void    OnCollisionEnter (Collision collision)
     {
         // Walls & other obstacles
-        if (collision.gameObject.layer == LayerMask.NameToLayer("GraspableObject") 
-            && flyState == FlyState.FLYING 
+        if (flyState == FlyState.FLYING
+            && collision.gameObject.layer == LayerMask.NameToLayer("GraspableObject") 
+            && collision.gameObject != lastCollidedObject
             && (Time.realtimeSinceStartup - lastRequestedLanding) / delayBetweenTriggerAndLanding < 1)
         {
+            lastCollidedObject = collision.gameObject;
+
             flyState = FlyState.LANDING;
             timeOfLanding = Time.realtimeSinceStartup;
 
@@ -304,11 +314,12 @@ public class FlyController : NetworkBehaviour {
             rotationOriginal = transform.rotation;
             landingNormal = collision.contacts[0].normal;
             rotationForLanding = Quaternion.FromToRotation(transform.up, landingNormal);
-
-            transform.Translate(landingNormal.normalized * 0.04f);
         }
-        else if (flyState != FlyState.LANDED && flyState != FlyState.STUNNED)
+        else if (flyState != FlyState.LANDED 
+            && flyState != FlyState.STUNNED)
         {
+            lastCollidedObject = collision.gameObject;
+
             flyState = FlyState.STUNNED;
             timeOfStun = Time.realtimeSinceStartup;
 
@@ -332,8 +343,10 @@ public class FlyController : NetworkBehaviour {
         if(flyState == FlyState.LANDED)
         {
             flyState = FlyState.FLYING;
-            flyAudio.volume = 1;
-            CmdSetSoundVolume(1);
+            flyAudio.volume = 0.5f;
+            CmdSetSoundVolume(0.5f);
+
+            lastCollidedObject = null;
         }
     }
     #endregion
