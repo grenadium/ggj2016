@@ -5,7 +5,7 @@ public class NetworkAuthorityAttachToNode : NetworkBehaviour
 {
     public string m_NodeName = "";
 
-    private void Start()
+    private void Update()
     {
         if (!hasAuthority)
             return;
@@ -17,5 +17,7 @@ public class NetworkAuthorityAttachToNode : NetworkBehaviour
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
         }
+
+        enabled = false;
     }
 }
