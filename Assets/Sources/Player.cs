@@ -30,8 +30,8 @@ public class Player : NetworkBehaviour
     [Command]
     public void CmdSpawnFly()
     {
-        var humanHead = Instantiate(m_FlyPrefab, Vector3.zero, Quaternion.identity) as GameObject;
-        NetworkServer.SpawnWithClientAuthority(humanHead, connectionToClient);
+        var fly = Instantiate(m_FlyPrefab, Vector3.zero, Quaternion.identity) as GameObject;
+        NetworkServer.SpawnWithClientAuthority(fly, connectionToClient);
     }
 
     public static PlayerType DetectPlayerType()
