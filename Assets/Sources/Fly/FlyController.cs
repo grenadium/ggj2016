@@ -120,6 +120,7 @@ public class FlyController : MonoBehaviour {
                     if((Time.realtimeSinceStartup - timeOfLanding) / landingTime >= 1)
                     {
                         flyState = FlyState.LANDED;
+                        transform.rotation = rotationForLanding * rotationOriginal;
                     }
                 }
                 break;
@@ -210,7 +211,7 @@ public class FlyController : MonoBehaviour {
     {
         // Natural decceleration (no data on it, just to add a little inertia)
         // Poses some problem with gravity
-        inductedMotion = inductedMotion * (1f - deccelerationCoef * worldScale * Time.deltaTime);
+        //inductedMotion = inductedMotion * (1f - deccelerationCoef * Time.deltaTime);
 
         // Maintain "A" to acccelerate
         // Note The axis seems inversed
@@ -295,7 +296,7 @@ public class FlyController : MonoBehaviour {
         // Gravity
         if (flyState == FlyState.FLYING || flyState == FlyState.STUNNED)
         {
-            inductedMotion += new Vector3(0, -9.8f, 0) * worldScale * Time.deltaTime;
+            inductedMotion += Physics.gravity * worldScale * Time.deltaTime;
         }
 
         flyBody.velocity = inductedMotion * speedStunCorrection;
@@ -315,7 +316,7 @@ public class FlyController : MonoBehaviour {
             timeOfStun = Time.realtimeSinceStartup;
 
             // Bouncing motion
-            inductedMotion = Vector3.Reflect(-collision.relativeVelocity, collision.contacts[0].normal);
+            inductedMotion = Vector3.Reflect(-collision.relativeVelocity * worldScale, collision.contacts[0].normal);
         }
         // Walls & other obstacles
         else if (collision.gameObject.layer == LayerMask.NameToLayer("GraspableObject") && flyState == FlyState.FLYING)
