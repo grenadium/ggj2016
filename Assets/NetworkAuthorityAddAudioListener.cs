@@ -12,6 +12,9 @@ public class NetworkAuthorityAddAudioListener : NetworkBehaviour {
 
 	    gameObject.AddComponent<AudioListener>();
 
-	    enabled = false;
+        // Hide head on self
+        transform.Find("head").gameObject.SetActive( false );
+
+        enabled = false;
 	}
 }
