@@ -16,8 +16,10 @@ public class AddCameraIfFlyPlayer : NetworkBehaviour
             defaultCamera.SetActive(false);
         }
 
-        var cameraPrefab = Instantiate(FlyCameraPrefab, Vector3.zero, Quaternion.identity) as GameObject;
-        cameraPrefab.transform.parent = transform;
+        var camera = Instantiate(FlyCameraPrefab, Vector3.zero, Quaternion.identity) as GameObject;
+        camera.transform.parent = transform;
+        camera.transform.localPosition = Vector3.zero;
+        camera.transform.localRotation = Quaternion.identity;
 
         enabled = false;
     }

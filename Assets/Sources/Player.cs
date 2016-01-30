@@ -29,7 +29,7 @@ public class Player : NetworkBehaviour
     [Command]
     public void CmdSpawnFly()
     {
-        var fly = Instantiate(m_FlyPrefab, Vector3.zero, Quaternion.identity) as GameObject;
+        var fly = Instantiate(m_FlyPrefab, new Vector3(0.0f,1.0f,0.0f), Quaternion.identity) as GameObject;
         NetworkServer.SpawnWithClientAuthority(fly, connectionToClient);
     }
 
