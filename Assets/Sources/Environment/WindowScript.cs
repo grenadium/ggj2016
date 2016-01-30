@@ -2,22 +2,43 @@
 using System.Collections;
 
 public class WindowScript : MonoBehaviour {
-    private Animator animator;
-    private AnimatorStateInfo currentState, previousState;
     public bool isOpened, isMoving;
-    private Vector3 previousPosition;
+    public float openingHeight; //hauteur d'ouverture de la fenetre
+    public float speed;
+    public Vector3 openedPos, closedPos, destination;
 
-	// Use this for initialization
-	void Start () {
-        animator = GetComponent<Animator>();
-        currentState = animator.GetCurrentAnimatorStateInfo(0);
-        previousState = currentState;
-        previousPosition = transform.position;
+    // Use this for initialization
+    void Start () {
+
+        openedPos = new Vector3(transform.position.x, transform.position.y + openingHeight, transform.position.z);
+        closedPos = transform.position;
+        destination = closedPos;
 
         isOpened = false;
         isMoving = false;
 
     }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (transform.position == openedPos)
+            isOpened = true;
+
+        else isOpened = false;
+
+        if (transform.position != destination)
+        {
+            isMoving = true;
+            transform.position = Vector3.MoveTowards(transform.position, destination, Time.deltaTime * speed);
+        }
+
+        else
+            isMoving = false;
+            
+    }
+
+
 
     //Animate the window
     public void changeWindowState()
@@ -25,34 +46,19 @@ public class WindowScript : MonoBehaviour {
         //open window
         if(!isOpened && !isMoving)
         {
-            animator.Play(GlobalVariables.ANIM_WINDOW_OPENING);
+            isMoving = true;
+            destination = openedPos;
         }
 
         //close window
         if(isOpened && !isMoving)
         {
-            animator.Play(GlobalVariables.ANIM_WINDOW_CLOSING);
+            isMoving = true;
+            destination = closedPos;
         }
 
     }
 
-    //Fonctions appelees en fin d'animation ouverture / fermeture
-    public void setWindowOpened()
-    {
-        isOpened = true;
-        isMoving = false;
-    }
 
-    public void setWindowClosed()
-    {
-        isOpened = false;
-        isMoving = false;
-    }
-
-    // Update is called once per frame
-    void Update ()
-    {
-
-    }
-
+    
 }
