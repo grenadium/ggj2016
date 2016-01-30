@@ -25,7 +25,8 @@ public class FlyController : MonoBehaviour {
         LANDED,
         STUNNED,
         STABILIZING,
-        TAKINGOFF
+        TAKINGOFF,
+        DEAD
     }
     private FlyState flyState = FlyState.FLYING;
 
@@ -49,6 +50,7 @@ public class FlyController : MonoBehaviour {
 
     // Motion
     public float maxSpeed = 120f; // Maximum unscaled speed of the fly (m/s)
+    public float minSpeed = 1f; // Constant flying speed
     public float sensibility = 0.1f; // value to surpass to apply motion
     public float tweakingThrottleSpeed = 0.7f; // Used to modify the motion speed to make it usable for human beings
     public float accelerationCoef = 2 * 9.8f; // Amount of speed gained by sec (approximately twice the acceleration of gravity)
@@ -70,11 +72,10 @@ public class FlyController : MonoBehaviour {
     public float takingOffDelay = 0.5f;
     public float dodgeBoost = 12f; // Speed boost made by takeoff
 
-    // Stabilization (deprecated)
-    //public bool enableStabilization = false; // We might want more control
-    //public Vector3 angularStabilizationSpeed = new Vector3(2f,2f,2f); // speed of correction, in degree/s, for each axis.
-
     private Rigidbody flyBody;
+
+    // Sound
+    private AudioSource flyAudio;
 
     // Debug purpose
     Vector3 forwardVector; // debug purpose
@@ -83,6 +84,7 @@ public class FlyController : MonoBehaviour {
     void Start ()
     {
         flyBody = GetComponent<Rigidbody>();
+        flyAudio = GetComponent<AudioSource>();
         GameObject world = GameObject.FindGameObjectWithTag("World");
         worldScale = world.transform.localScale.x; // We suppose scaling is uniform
     }
@@ -97,6 +99,8 @@ public class FlyController : MonoBehaviour {
                     if((Time.realtimeSinceStartup - timeOfLanding) / landingTime >= 1)
                     {
                         flyState = FlyState.LANDED;
+                        flyAudio.Stop();
+                        flyAudio.loop = false;
                         transform.rotation = rotationForLanding * rotationOriginal;
                     }
                 }
@@ -137,7 +141,9 @@ public class FlyController : MonoBehaviour {
                 {
                     // Check time left before regaining control
                     if ((Time.realtimeSinceStartup - timeOfStun) / stunDuration >= 1)
+                    {
                         flyState = FlyState.FLYING;
+                    }
                 }
                 break;
         }
@@ -209,6 +215,8 @@ public class FlyController : MonoBehaviour {
             if(flyState == FlyState.LANDED)
             {
                 flyState = FlyState.TAKINGOFF;
+                flyAudio.Play();
+                flyAudio.loop = true;
             }
             else
             {
@@ -223,20 +231,14 @@ public class FlyController : MonoBehaviour {
          // Natural decceleration (no data on it, just to add a little inertia)
         forwardSpeed -= forwardSpeed.normalized * deccelerationCoef * worldScale * Time.deltaTime;
 
-        // Make sure we can't go faster than max speed
-        if (flyState == FlyState.LANDED)
+        // Max speed
+        if (forwardSpeed.magnitude > tweakingThrottleSpeed * (flyState == FlyState.LANDED ? landedMaxSpeed : maxSpeed)  * worldScale)
         {
-            if (forwardSpeed.magnitude > tweakingThrottleSpeed * landedMaxSpeed * worldScale)
-            {
-                forwardSpeed = forwardSpeed.normalized * tweakingThrottleSpeed * landedMaxSpeed * worldScale;
-            }
+            forwardSpeed = forwardSpeed.normalized * tweakingThrottleSpeed * (flyState == FlyState.LANDED ? landedMaxSpeed : maxSpeed) * worldScale;
         }
-        else
+        else if (flyState == FlyState.FLYING && forwardSpeed.magnitude < tweakingThrottleSpeed * minSpeed * worldScale)
         {
-            if (forwardSpeed.magnitude > tweakingThrottleSpeed * maxSpeed * worldScale)
-            {
-                forwardSpeed = forwardSpeed.normalized * tweakingThrottleSpeed * maxSpeed * worldScale;
-            }
+            forwardSpeed = forwardSpeed.normalized * tweakingThrottleSpeed * minSpeed * worldScale;
         }
 
         flyBody.velocity = forwardSpeed;
@@ -270,15 +272,24 @@ public class FlyController : MonoBehaviour {
 
             transform.Translate(landingNormal.normalized * 0.04f);
         }
-        else
+        else if (flyState != FlyState.LANDED && flyState != FlyState.STUNNED)
         {
             flyState = FlyState.STUNNED;
             timeOfStun = Time.realtimeSinceStartup;
 
             // Bouncing motion
             forwardSpeed = Vector3.Reflect(-collision.relativeVelocity * worldScale, collision.contacts[0].normal);
-            //angularMotion = Random.rotation;
         }
+        else if (
+                (flyState == FlyState.LANDED && collision.gameObject.layer == LayerMask.NameToLayer("Tapette")) // Crushed on the wall
+                || (flyState == FlyState.STUNNED && forwardSpeed.magnitude > 0.5f) // Thrown against the wall
+                )
+        {
+            flyState = FlyState.DEAD;
+            flyAudio.loop = false;
+            flyAudio.Stop();
+        }
+
     }
 
     void OnCollisionExit (Collision collision)
@@ -286,8 +297,9 @@ public class FlyController : MonoBehaviour {
         if(flyState == FlyState.LANDED)
         {
             flyState = FlyState.FLYING;
+            flyAudio.loop = true;
+            flyAudio.Play();
         }
     }
-
     #endregion
 }
