@@ -24,7 +24,8 @@ public class FlyController : MonoBehaviour {
         LANDING,
         LANDED,
         STUNNED,
-        STABILIZING
+        STABILIZING,
+        TAKINGOFF
     }
     private FlyState flyState = FlyState.FLYING;
 
@@ -34,10 +35,12 @@ public class FlyController : MonoBehaviour {
     public float speedStunCorrection = 1f; // Lower to slow down the fly (when stun) 
 
     // Landing state
+    private float lastRequestedLanding = 0f; // LAst time the trigger was pushed
+    private float delayBetweenTriggerAndLanding = 0.8f; // Time necessary between the trigger input & the collision
     private float timeOfLanding = 0f; // Time of landing initiated
     public float landedMaxSpeed = 40f;
     public float landingTime = 0.3f;
-    public float landedSlowCoefficient = 0.2f; // How much of the normal throttle is kept during landed navigation
+    public float tweakingLandedSpeed = 0.2f; // How much of the normal throttle is kept during landed navigation
     private Quaternion rotationOriginal; // Rotation of the fly when landing was initiated, used for interpolation
     private Quaternion rotationForLanding; // Rotation to be made to land properly
     private Vector3 landingNormal; // Normal of the surface used to land
@@ -62,14 +65,14 @@ public class FlyController : MonoBehaviour {
     private float timeOfStabilization;
     private Quaternion rotationForStabilization; // rotation necessary to stabilize the roll
 
-    // Dodging
-    private float timeOfDodge = 0f; // last time a dodge was made
-    public float dodgeDelay = 1f; // We can't just spam dodging
-    public Vector3 dodgeBoost = new Vector3(12f, 12f, 12f); // Speed boost made by dodging
+    // Taking off
+    private float timeOfTakingOff = 0f; // last time a dodge was made
+    public float takingOffDelay = 0.5f;
+    public float dodgeBoost = 12f; // Speed boost made by takeoff
 
     // Stabilization (deprecated)
-    public bool enableStabilization = false; // We might want more control
-    public Vector3 angularStabilizationSpeed = new Vector3(2f,2f,2f); // speed of correction, in degree/s, for each axis.
+    //public bool enableStabilization = false; // We might want more control
+    //public Vector3 angularStabilizationSpeed = new Vector3(2f,2f,2f); // speed of correction, in degree/s, for each axis.
 
     private Rigidbody flyBody;
 
@@ -107,6 +110,17 @@ public class FlyController : MonoBehaviour {
                     {
                         flyState = FlyState.FLYING;
                         transform.rotation = rotationForStabilization * rotationOriginal;
+                    }
+                }
+                break;
+
+            case FlyState.TAKINGOFF:
+                {
+                    // 
+                    forwardSpeed += dodgeBoost * transform.up * tweakingThrottleSpeed * worldScale * Time.deltaTime;
+                    if ((Time.realtimeSinceStartup - timeOfTakingOff) / takingOffDelay >= 1)
+                    {
+                        flyState = FlyState.FLYING;
                     }
                 }
                 break;
@@ -162,7 +176,7 @@ public class FlyController : MonoBehaviour {
         }
 
         // Stabilization
-        if(Input.GetButton(controllerMappings.StabilizeButton))
+        if(Input.GetButton(controllerMappings.StabilizeButton) && flyState == FlyState.FLYING)
         {
             flyState = FlyState.STABILIZING;
             timeOfStabilization = Time.realtimeSinceStartup;
@@ -177,38 +191,30 @@ public class FlyController : MonoBehaviour {
 
     void    ForwardMotion   ()
     {
-
-        // Maintain "A" to acccelerate
-        // Note The axis seems inversed
         float throttle = 0f;
         if ((throttle = Input.GetAxis(controllerMappings.ThrottleAxis)) > sensibility || throttle < -sensibility)
         {
-            Vector3 motion = throttle * transform.forward * tweakingThrottleSpeed * accelerationCoef * worldScale * Time.deltaTime;
-            if(flyState == FlyState.LANDED)
-                motion *= landedSlowCoefficient;
-            forwardSpeed += motion;
+            forwardSpeed += throttle * transform.forward * (flyState == FlyState.LANDED ? tweakingLandedSpeed : tweakingThrottleSpeed) * accelerationCoef * worldScale * Time.deltaTime;
         }
 
         float strafe = 0;
         if ((strafe = Input.GetAxis(controllerMappings.StrafeAxis)) > sensibility || strafe < -sensibility)
         {
-            Vector3 motion = strafe * transform.right * tweakingThrottleSpeed * accelerationCoef * worldScale * Time.deltaTime;
-            if (flyState == FlyState.LANDED)
-                motion *= landedSlowCoefficient;
-            forwardSpeed += motion;
+            forwardSpeed += strafe * transform.right * (flyState == FlyState.LANDED ? tweakingLandedSpeed : tweakingThrottleSpeed) * accelerationCoef * worldScale * Time.deltaTime;
         }
 
-        // We can dodge
-        float dodge = 0f;
-        // Use "B" to make a dodge upward and & X to make it downward
-        if ((dodge = Input.GetAxis(controllerMappings.VerticalAxis)) > sensibility || dodge < -sensibility)
+        float verticalMotion = 0f;
+        if ((verticalMotion = Input.GetAxis(controllerMappings.VerticalAxis)) > sensibility || verticalMotion < -sensibility)
         {
-            Vector3 motion = dodge * transform.up * tweakingThrottleSpeed * accelerationCoef * worldScale * Time.deltaTime;
-            forwardSpeed += motion;
-
-            // Special take-off motion
             if(flyState == FlyState.LANDED)
-                flyState = FlyState.FLYING;
+            {
+                flyState = FlyState.TAKINGOFF;
+            }
+            else
+            {
+                forwardSpeed += verticalMotion * transform.up * tweakingThrottleSpeed * accelerationCoef * worldScale * Time.deltaTime;
+                lastRequestedLanding = Time.realtimeSinceStartup;
+            }
         }
     }
 
@@ -242,18 +248,10 @@ public class FlyController : MonoBehaviour {
 
     void    OnCollisionEnter (Collision collision)
     {
-        // Stun
-        if(collision.gameObject.layer == LayerMask.NameToLayer("StunningObject"))
-        {
-            flyState = FlyState.STUNNED;
-            timeOfStun = Time.realtimeSinceStartup;
-
-            // Bouncing motion
-            forwardSpeed = Vector3.Reflect(-collision.relativeVelocity * worldScale, collision.contacts[0].normal);
-            angularMotion = Random.rotation;
-        }
         // Walls & other obstacles
-        else if (collision.gameObject.layer == LayerMask.NameToLayer("GraspableObject") && flyState == FlyState.FLYING)
+        if (collision.gameObject.layer == LayerMask.NameToLayer("GraspableObject") 
+            && flyState == FlyState.FLYING 
+            && (Time.realtimeSinceStartup - lastRequestedLanding) / delayBetweenTriggerAndLanding < 1)
         {
             flyState = FlyState.LANDING;
             timeOfLanding = Time.realtimeSinceStartup;
@@ -261,10 +259,25 @@ public class FlyController : MonoBehaviour {
             // No velocity
             forwardSpeed = Vector3.zero;
 
+            // Freezes
+            flyBody.angularVelocity = Vector3.zero;
+            flyBody.velocity = Vector3.zero;
+
+            // Rotation
             rotationOriginal = transform.rotation;
             landingNormal = collision.contacts[0].normal;
-
             rotationForLanding = Quaternion.FromToRotation(transform.up, landingNormal);
+
+            transform.Translate(landingNormal.normalized * 0.04f);
+        }
+        else
+        {
+            flyState = FlyState.STUNNED;
+            timeOfStun = Time.realtimeSinceStartup;
+
+            // Bouncing motion
+            forwardSpeed = Vector3.Reflect(-collision.relativeVelocity * worldScale, collision.contacts[0].normal);
+            //angularMotion = Random.rotation;
         }
     }
 
