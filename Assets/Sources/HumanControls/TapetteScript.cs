@@ -87,7 +87,7 @@ public class TapetteScript : MonoBehaviour {
                 Destroy(particleSystem, 0.5f);
 
                 //Créer la texture de confiture
-                GameObject jamSpill = (GameObject)Instantiate(Resources.Load("Prefabs/JamSpill"));
+                GameObject jamSpill = (GameObject)Instantiate(Resources.Load("Prefabs/JamTexture"));
                 jamSpill.GetComponent<MeshRenderer>().enabled = true;
 
                 RaycastHit hit;
