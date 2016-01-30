@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Linq;
 using UnityEngine.Networking;
 
 public class GameManager : MonoBehaviour
@@ -12,8 +13,14 @@ public class GameManager : MonoBehaviour
 	// Use this for initialization
 	protected void Start ()
 	{
-	    CreateNetworkManager(ForceHuman ? Player.PlayerType.Human : Player.DetectPlayerType());
+	    Player.ProcessPlayerType = ForceHuman ? Player.PlayerType.Human : DetectPlayerType();
+        CreateNetworkManager(Player.ProcessPlayerType);
 	}
+
+    public static Player.PlayerType DetectPlayerType()
+    {
+        return System.Environment.GetCommandLineArgs().Any(arg => arg == "--config") ? Player.PlayerType.Human : Player.PlayerType.Fly;
+    }
 
     private void CreateNetworkManager(Player.PlayerType iPlayerType)
     {
@@ -25,13 +32,13 @@ public class GameManager : MonoBehaviour
 
         if (iPlayerType == Player.PlayerType.Human)
         {
+            var vrManagerPrefabScript = VrManagerPrefab.GetComponent<VRManagerScript>();
+            vrManagerPrefabScript.ShowWand = false;
+            vrManagerPrefabScript.UseVRMenu = false;
+            vrManagerPrefabScript.ConfigFile = DefaultHumanConfig;
+
             var vrManagerObject = Instantiate(VrManagerPrefab, Vector3.zero, Quaternion.identity) as GameObject;
             if (vrManagerObject == null) return;
-
-            var vrManagerScript = vrManagerObject.GetComponent<VRManagerScript>();
-            vrManagerScript.ShowWand = false;
-            vrManagerScript.UseVRMenu = false;
-            vrManagerScript.ConfigFile = DefaultHumanConfig;
 
             networkManagerScript.StartHost();
             if (!VrManagerPrefab) return;

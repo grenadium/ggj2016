@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System.Linq;
 using UnityEngine.Networking;
 
 public class Player : NetworkBehaviour
@@ -15,7 +14,7 @@ public class Player : NetworkBehaviour
     public GameObject m_HumanHandPrefab = null;
     public GameObject m_FlyPrefab = null;
 
-    public PlayerType m_PlayerType = PlayerType.Human;
+    public static PlayerType ProcessPlayerType = PlayerType.Human;
 
     [Command]
     public void CmdSpawnHuman()
@@ -34,19 +33,13 @@ public class Player : NetworkBehaviour
         NetworkServer.SpawnWithClientAuthority(fly, connectionToClient);
     }
 
-    public static PlayerType DetectPlayerType()
-    {
-        return System.Environment.GetCommandLineArgs().Any(arg => arg == "--config") ? PlayerType.Human : PlayerType.Fly;
-    }
-
     // Use this for initialization
     void Start ()
     {
         if (!isLocalPlayer)
             return;
 
-        m_PlayerType = DetectPlayerType();
-        if (m_PlayerType == PlayerType.Human)
+        if (ProcessPlayerType == PlayerType.Human)
         {
             CmdSpawnHuman();
         }
