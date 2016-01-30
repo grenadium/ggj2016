@@ -8,6 +8,7 @@ using System.Collections.Generic;
 public class TapetteScript : MonoBehaviour {
 
     public float minimumKillSpeed; //Vitesse minimale pour considerer que la tapette tue la mouche
+    public float minimumJamBreakSpeed; //vitesse mini pour casser le pot de confiture
     public float repulsionForce; // force pour repousser la mouche
     public float currentVelocity;
     public int nbFramesForVelocity = 5; //nombre de frames à prendre en compte pour le calcul de la vélocité (plus il y a de frames, plus le mouvement doit être grand)
@@ -66,15 +67,53 @@ public class TapetteScript : MonoBehaviour {
             }
         }
 
+        //Touche la fenetre
         else if(col.gameObject.tag == GlobalVariables.T_WINDOW)
         {
             Debug.Log("fenetre touchee");
             col.gameObject.GetComponent<WindowScript>().changeWindowState();
         }
+
+        //Touche un pot de confiture
+        else if (col.gameObject.tag == GlobalVariables.T_JAM)
+        {
+            Debug.Log("confiture touchee");
+
+
+            if(canBreakJamPot())
+            {
+                GameObject particleSystem = (GameObject)Instantiate(Resources.Load("Prefabs/JamSpurt"));
+                particleSystem.transform.position = this.transform.position;
+                Destroy(particleSystem, 0.5f);
+
+                //Créer la texture de confiture
+                GameObject jamSpill = (GameObject)Instantiate(Resources.Load("Prefabs/JamTexture"));
+                jamSpill.GetComponent<MeshRenderer>().enabled = true;
+
+                RaycastHit hit;
+
+                //Placer la texture confiture en dessous du pot
+                if (Physics.Raycast(col.gameObject.transform.position, -Vector3.up, out hit))
+                {
+                    jamSpill.transform.position = hit.point;
+
+                    float yRotation = Random.Range(0f, 360f); //rotation aléatoire sur y
+
+                    jamSpill.transform.Rotate(Vector3.up, yRotation);
+                }
+
+                Destroy(col.gameObject);
+                jamSpill.AddComponent<JamScript>();
+                jamSpill.GetComponent<JamScript>().lifeTime = GlobalVariables.JAM_LIFE_TIME;
+            }
+            
+        }
+
+
     }
 
     //Verifier que la tapette a une vitesse suffisante pour pouvoir ecraser la mouche
-    bool canSquishFly()
+    public bool canSquishFly()
     {
         Debug.Log(currentVelocity);
 
@@ -93,4 +132,17 @@ public class TapetteScript : MonoBehaviour {
 
         return false;
     }
+
+    //Verifier qu'on a assez de vitesse pour casser un pot de confiture
+    public bool canBreakJamPot()
+    {
+        //Si assez de vitesse, on peut casser le pot
+        if (currentVelocity >= minimumJamBreakSpeed)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
 }
