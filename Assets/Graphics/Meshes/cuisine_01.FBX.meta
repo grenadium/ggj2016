@@ -24,6 +24,9 @@ ModelImporter:
     100032: portes_placards_04
     100034: etagere_01
     100036: evier_01
+    100038: fridge_poignee_01
+    100040: table_01
+    100042: table_pieds_01
     400000: //RootNode
     400002: fridge_01
     400004: mur_01
@@ -43,6 +46,9 @@ ModelImporter:
     400032: portes_placards_04
     400034: etagere_01
     400036: evier_01
+    400038: fridge_poignee_01
+    400040: table_01
+    400042: table_pieds_01
     2300000: fridge_01
     2300002: mur_01
     2300004: mur_02
@@ -61,6 +67,9 @@ ModelImporter:
     2300030: portes_placards_04
     2300032: etagere_01
     2300034: evier_01
+    2300036: fridge_poignee_01
+    2300038: table_01
+    2300040: table_pieds_01
     3300000: fridge_01
     3300002: mur_01
     3300004: mur_02
@@ -79,6 +88,9 @@ ModelImporter:
     3300030: portes_placards_04
     3300032: etagere_01
     3300034: evier_01
+    3300036: fridge_poignee_01
+    3300038: table_01
+    3300040: table_pieds_01
     4300000: sol_01
     4300002: fridge_01
     4300004: mur_01
@@ -97,6 +109,9 @@ ModelImporter:
     4300030: portes_placards_04
     4300032: etagere_01
     4300034: evier_01
+    4300036: fridge_poignee_01
+    4300038: table_01
+    4300040: table_pieds_01
   materials:
     importMaterials: 1
     materialName: 0
