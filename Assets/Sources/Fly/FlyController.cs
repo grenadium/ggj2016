@@ -81,7 +81,9 @@ public class FlyController : NetworkBehaviour {
     public AudioClip buzzSound;
     public AudioClip[] boingSound;
     public AudioClip flyVictoryJingle;
+    public AudioClip flyDefeatJingle;
     public AudioClip humanVictoryJingle;
+    public AudioClip humanDefeatJingle;
 
     private Rigidbody flyBody;
     private AudioSource flyAudio;
@@ -305,11 +307,7 @@ public class FlyController : NetworkBehaviour {
             && flyState != FlyState.DEAD)
         {
             lastCollidedObject = collision.gameObject;
-
-            int randIndex = Random.Range(0, boingSound.Length - 1);
-            AudioSource.PlayClipAtPoint(boingSound[randIndex], collision.contacts[0].point);
-
-            flyState = FlyState.STUNNED;
+            CmdSetCollide(collision.contacts[0].point);
             timeOfStun = Time.realtimeSinceStartup;
 
             // Bouncing motion
@@ -339,14 +337,18 @@ public class FlyController : NetworkBehaviour {
     {
         if (other.gameObject.tag == "EscapeZone" && flyState != FlyState.VICTORIOUS)
         {
-            //flyState = FlyState.VICTORIOUS;
-            //AudioSource.PlayClipAtPoint(flyVictoryJingle, Vector3.zero);
             CmdSetVictorious();
         }
     }
     #endregion
 
     #region Network
+
+    [Command]
+    void CmdSetCollide(Vector3 point)
+    {
+        RpcSetCollide(point);
+    }
 
     [Command]
     void CmdSetSpeed(float speed)
@@ -379,10 +381,26 @@ public class FlyController : NetworkBehaviour {
     }
 
     [ClientRpc]
+    public void RpcSetCollide (Vector3 point)
+    {
+        flyState = FlyState.STUNNED;
+        int randIndex = Random.Range(0, boingSound.Length - 1);
+        AudioSource.PlayClipAtPoint(boingSound[randIndex], point);
+    }
+
+    [ClientRpc]
     void RpcSetVictorious ()
     {
-        flyState = FlyState.VICTORIOUS;
-        AudioSource.PlayClipAtPoint(flyVictoryJingle, Vector3.zero);
+        // The fly is victorious
+        if (!hasAuthority)
+        {
+            AudioSource.PlayClipAtPoint(humanDefeatJingle, Vector3.zero);
+        }
+        else
+        {
+            flyState = FlyState.VICTORIOUS;
+            AudioSource.PlayClipAtPoint(flyVictoryJingle, Vector3.zero);
+        }
     }
 
     [ClientRpc]
@@ -413,7 +431,16 @@ public class FlyController : NetworkBehaviour {
         flyState = FlyState.DEAD;
         flyAudio.volume = 0.0f;
         AudioSource.PlayClipAtPoint(deathSound, transform.position, 1);
-        AudioSource.PlayClipAtPoint(humanVictoryJingle, Vector3.zero);
+
+        // The fly is dead
+        if (!hasAuthority)
+        {
+            AudioSource.PlayClipAtPoint(flyDefeatJingle, Vector3.zero);
+        }
+        else
+        {
+            AudioSource.PlayClipAtPoint(humanDefeatJingle, Vector3.zero);
+        }
     }
 
     #endregion
