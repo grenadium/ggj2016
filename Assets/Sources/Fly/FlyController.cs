@@ -28,6 +28,7 @@ public class FlyController : NetworkBehaviour {
         STABILIZING,
         TAKINGOFF,
         DEAD,
+        STUCK,
         VICTORIOUS
     }
     public FlyState flyState = FlyState.FLYING;
@@ -38,6 +39,10 @@ public class FlyController : NetworkBehaviour {
     private float timeOfStun = 0f; // time at which the fly was hit
     public float stunDuration = 0.2f; // time during which the fly has limited control over its motion
     public float speedStunCorrection = 1f; // Lower to slow down the fly (when stun) 
+
+    // Stuck state
+    private float timeOfStuck = 0f;
+    public float stuckDuration = 5f;
 
     // Landing state
     private float lastRequestedLanding = 0f; // LAst time the trigger was pushed
@@ -186,6 +191,19 @@ public class FlyController : NetworkBehaviour {
                     }
                 }
                 break;
+
+            case FlyState.STUCK:
+                flyBody.velocity = Vector3.zero;
+                flyBody.angularVelocity = Vector3.zero;
+                flyBody.constraints = RigidbodyConstraints.FreezeAll;
+
+                // Check time left before regaining control
+                if ((Time.realtimeSinceStartup - timeOfStuck) / stuckDuration >= 1)
+                {
+                    flyBody.constraints = RigidbodyConstraints.None;
+                    CmdSetFlying();
+                }
+                break;
         }
 
 
@@ -288,6 +306,11 @@ public class FlyController : NetworkBehaviour {
     #region Collision
     void    OnCollisionEnter (Collision collision)
     {
+        if(flyState == FlyState.DEAD)
+        {
+            return;
+        }
+
         // Walls & other obstacles
         if (flyState == FlyState.FLYING
             && collision.gameObject.layer == LayerMask.NameToLayer("GraspableObject") 
@@ -312,8 +335,7 @@ public class FlyController : NetworkBehaviour {
             rotationForLanding = Quaternion.FromToRotation(transform.up, landingNormal);
         }
         else if (flyState != FlyState.LANDED 
-            && flyState != FlyState.STUNNED
-            && flyState != FlyState.DEAD)
+            && flyState != FlyState.STUNNED)
         {
             lastCollidedObject = collision.gameObject;
             CmdSetCollide(collision.contacts[0].point);
@@ -347,6 +369,12 @@ public class FlyController : NetworkBehaviour {
         if (other.gameObject.tag == "EscapeZone" && flyState != FlyState.VICTORIOUS)
         {
             CmdSetVictorious();
+        }
+        else if (flyState == FlyState.LANDED || flyState == FlyState.STUNNED || flyState == FlyState.FLYING
+        && other.tag == "StickyJam")
+        {
+            timeOfStuck = Time.realtimeSinceStartup;
+            CmdSetStuck();
         }
     }
     #endregion
@@ -387,6 +415,19 @@ public class FlyController : NetworkBehaviour {
     void CmdSetVictorious ()
     {
         RpcSetVictorious();
+    }
+
+    [Command]
+    void CmdSetStuck ()
+    {
+        RpcSetStuck();
+    }
+
+    [ClientRpc]
+    public void RpcSetStuck ()
+    {
+        flyState = FlyState.STUCK;
+        flyAudio.volume = 0.0f;
     }
 
     [ClientRpc]
