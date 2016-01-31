@@ -10,9 +10,15 @@ public class GameManager : MonoBehaviour
     public GameObject NetworkManagerPrefab = null;
     public GameObject VrManagerPrefab = null;
 
+    // Victory
+    public AudioClip humanVictoryJingle;
+    public AudioClip flyVictoryJingle;
+    private AudioSource musicSource;
+
 	// Use this for initialization
 	protected void Start ()
 	{
+        musicSource = GetComponent<AudioSource>();
 	    Player.ProcessPlayerType = ForceHuman ? Player.PlayerType.Human : DetectPlayerType();
         CreateNetworkManager(Player.ProcessPlayerType);
 	}
@@ -52,4 +58,24 @@ public class GameManager : MonoBehaviour
             networkManagerObject.AddComponent<NetworkManagerHUD>();
         }
     }
+
+    #region Victory
+
+    public void SignalVictory (Player.PlayerType player)
+    {
+        switch(player)
+        {
+            case Player.PlayerType.Fly:
+                musicSource.clip = flyVictoryJingle;
+                break;
+
+            case Player.PlayerType.Human:
+                musicSource.clip = humanVictoryJingle;
+                break;
+        }
+
+        musicSource.Play();
+    }
+
+    #endregion
 }

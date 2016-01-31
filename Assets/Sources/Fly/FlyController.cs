@@ -95,6 +95,9 @@ public class FlyController : NetworkBehaviour {
         flyAudio = GetComponent<AudioSource>();
         GameObject world = GameObject.FindGameObjectWithTag("World");
         worldScale = world.transform.localScale.x; // We suppose scaling is uniform
+
+        flyBody.maxAngularVelocity = 0.01f;
+        flyBody.maxDepenetrationVelocity = 0.01f;
     }
 
     void Update ()
@@ -323,6 +326,9 @@ public class FlyController : NetworkBehaviour {
             AudioSource.PlayClipAtPoint(deathSound, collision.contacts[0].point, 1);
 
             flyState = FlyState.DEAD;
+
+            GameManager gameManager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
+            gameManager.SignalVictory(Player.PlayerType.Human);
         }
 
     }
