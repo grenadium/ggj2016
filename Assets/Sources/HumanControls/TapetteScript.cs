@@ -129,6 +129,12 @@ public class TapetteScript : MonoBehaviour {
             
         }
 
+        //Toucher le panneau start au début
+        else if(col.gameObject.tag == GlobalVariables.T_MENU_ITEM)
+        {
+
+        }
+
 
     }
 
