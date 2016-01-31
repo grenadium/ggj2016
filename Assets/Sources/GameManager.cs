@@ -3,28 +3,44 @@ using System.Collections;
 using System.Linq;
 using UnityEngine.Networking;
 
-public class GameManager : MonoBehaviour
+public class GameManager : NetworkBehaviour
 {
     // Victory
     public AudioClip humanVictoryJingle;
     public AudioClip flyVictoryJingle;
     private AudioSource musicSource;
 
+    public enum GameState
+    {
+        PLAYING,
+        FINISHED
+    }
+    public static GameState gameState = GameState.PLAYING;
+
     #region Victory
+    void Start ()
+    {
+        musicSource = GetComponent<AudioSource>();
+    }
+
     public void SignalVictory (Player.PlayerType player)
     {
-        switch(player)
+        if (gameState == GameState.PLAYING)
         {
-            case Player.PlayerType.Fly:
-                musicSource.clip = flyVictoryJingle;
-                break;
+            switch (player)
+            {
+                case Player.PlayerType.Fly:
+                    musicSource.clip = flyVictoryJingle;
+                    break;
 
-            case Player.PlayerType.Human:
-                musicSource.clip = humanVictoryJingle;
-                break;
+                case Player.PlayerType.Human:
+                    musicSource.clip = humanVictoryJingle;
+                    break;
+            }
+
+            gameState = GameState.FINISHED;
+            musicSource.Play();
         }
-
-        musicSource.Play();
     }
     #endregion
 }

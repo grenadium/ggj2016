@@ -79,6 +79,10 @@ public class TapetteController : NetworkBehaviour {
     #endregion
 
     #region Collision events
+    /// <summary>
+    /// Called in every client
+    /// </summary>
+    /// <param name="position"></param>
     public void Slap    (Vector3 position)
     {
         // Slap sounds
@@ -90,18 +94,21 @@ public class TapetteController : NetworkBehaviour {
             lastSlapPlayed = Time.realtimeSinceStartup;
         }
 
-        // Jingle
-        if(!jingleSoundIsPlaying)
+        if(GameObject.FindGameObjectWithTag("Fly").GetComponent<FlyController>().flyState != FlyController.FlyState.DEAD)
         {
-            int index = Random.Range(0, jingleSounds.Length - 1);
-            tapetteAudio.clip = jingleSounds[index];
-            lastJinglePlayed = Time.realtimeSinceStartup;
-            tapetteAudio.Play();
-            jingleSoundIsPlaying = true;
-        }
-        else
-        {
-            lastJinglePlayed = Time.realtimeSinceStartup;
+            // Jingle
+            if (!jingleSoundIsPlaying)
+            {
+                int index = Random.Range(0, jingleSounds.Length - 1);
+                tapetteAudio.clip = jingleSounds[index];
+                lastJinglePlayed = Time.realtimeSinceStartup;
+                tapetteAudio.Play();
+                jingleSoundIsPlaying = true;
+            }
+            else
+            {
+                lastJinglePlayed = Time.realtimeSinceStartup;
+            }
         }
     }
     #endregion

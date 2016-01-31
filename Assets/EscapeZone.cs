@@ -7,7 +7,7 @@ public class EscapeZone : MonoBehaviour {
 
 	void OnTriggerEnter (Collider other)
     {
-        if (other.gameObject.layer == LayerMask.NameToLayer("Fly"))
+        if (other.gameObject.tag == "Fly")
         {
             flyHasEscaped = true;
 

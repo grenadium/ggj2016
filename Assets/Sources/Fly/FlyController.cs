@@ -27,9 +27,10 @@ public class FlyController : NetworkBehaviour {
         STUNNED,
         STABILIZING,
         TAKINGOFF,
-        DEAD
+        DEAD,
+        VICTORIOUS
     }
-    private FlyState flyState = FlyState.FLYING;
+    public FlyState flyState = FlyState.FLYING;
 
     public float minimumKillSpeed; //Vitesse minimale pour considerer que la tapette tue la mouche
 
@@ -79,6 +80,8 @@ public class FlyController : NetworkBehaviour {
     public AudioClip deathSound;
     public AudioClip buzzSound;
     public AudioClip[] boingSound;
+    public AudioClip flyVictoryJingle;
+    public AudioClip humanVictoryJingle;
 
     private Rigidbody flyBody;
     private AudioSource flyAudio;
@@ -113,9 +116,7 @@ public class FlyController : NetworkBehaviour {
                     transform.rotation = Quaternion.Lerp(rotationOriginal, rotationForLanding * rotationOriginal, (Time.realtimeSinceStartup - timeOfLanding) / landingTime);
                     if((Time.realtimeSinceStartup - timeOfLanding) / landingTime >= 1)
                     {
-                        flyState = FlyState.LANDED;
-                        flyAudio.volume = 0f;
-                        CmdSetSoundVolume(0f);
+                        CmdSetLanded();
                         transform.rotation = rotationForLanding * rotationOriginal;
                     }
                 }
@@ -127,7 +128,7 @@ public class FlyController : NetworkBehaviour {
                     transform.rotation = Quaternion.Lerp(rotationOriginal, rotationForStabilization * rotationOriginal, (Time.realtimeSinceStartup - timeOfStabilization) / stabilizationDelay);
                     if ((Time.realtimeSinceStartup - timeOfStabilization) / stabilizationDelay >= 1)
                     {
-                        flyState = FlyState.FLYING;
+                        CmdSetFlying();
                         transform.rotation = rotationForStabilization * rotationOriginal;
                     }
                 }
@@ -139,9 +140,7 @@ public class FlyController : NetworkBehaviour {
                     forwardSpeed += dodgeBoost * transform.up * tweakingThrottleSpeed * worldScale * Time.deltaTime;
                     if ((Time.realtimeSinceStartup - timeOfTakingOff) / takingOffDelay >= 1)
                     {
-                        flyState = FlyState.FLYING;
-                        flyAudio.volume = 0.5f;
-                        CmdSetSoundVolume(0.5f);
+                        CmdSetFlying();
                         lastCollidedObject = null;
                     }
                 }
@@ -171,7 +170,7 @@ public class FlyController : NetworkBehaviour {
                     // Check time left before regaining control
                     if ((Time.realtimeSinceStartup - timeOfStun) / stunDuration >= 1)
                     {
-                        flyState = FlyState.FLYING;
+                        CmdSetFlying();
                         lastCollidedObject = null;
                     }
                 }
@@ -321,18 +320,8 @@ public class FlyController : NetworkBehaviour {
                 || (flyState == FlyState.STUNNED && lastCollidedObject.layer == LayerMask.NameToLayer("Tapette")) // Thrown against the wall
                 )
         {
-            // Buzzing sound volume
-            flyAudio.volume = 0;
-            CmdSetSoundVolume(0);
-
             // Death sound
-            CmdSetDeathSound();
-            AudioSource.PlayClipAtPoint(deathSound, collision.contacts[0].point, 1);
-
-            flyState = FlyState.DEAD;
-
-            GameManager gameManager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
-            gameManager.SignalVictory(Player.PlayerType.Human);
+            CmdSetDead();
         }
 
     }
@@ -341,11 +330,18 @@ public class FlyController : NetworkBehaviour {
     {
         if(flyState == FlyState.LANDED)
         {
-            flyState = FlyState.FLYING;
-            flyAudio.volume = 0.5f;
-            CmdSetSoundVolume(0.5f);
-
+            CmdSetFlying();
             lastCollidedObject = null;
+        }
+    }
+
+    void OnTriggerEnter (Collider other)
+    {
+        if (other.gameObject.tag == "EscapeZone" && flyState != FlyState.VICTORIOUS)
+        {
+            //flyState = FlyState.VICTORIOUS;
+            //AudioSource.PlayClipAtPoint(flyVictoryJingle, Vector3.zero);
+            CmdSetVictorious();
         }
     }
     #endregion
@@ -359,15 +355,34 @@ public class FlyController : NetworkBehaviour {
     }
 
     [Command]
-    void CmdSetSoundVolume(float volume)
+    void CmdSetFlying()
     {
-        RpcSetVolume(volume);
+        RpcSetFlying();
     }
 
     [Command]
-    void CmdSetDeathSound()
+    void CmdSetLanded()
     {
-        RpcSetDeathSound();
+        RpcSetLanded();
+    }
+
+    [Command]
+    void CmdSetDead()
+    {
+        RpcSetDead();
+    }
+
+    [Command]
+    void CmdSetVictorious ()
+    {
+        RpcSetVictorious();
+    }
+
+    [ClientRpc]
+    void RpcSetVictorious ()
+    {
+        flyState = FlyState.VICTORIOUS;
+        AudioSource.PlayClipAtPoint(flyVictoryJingle, Vector3.zero);
     }
 
     [ClientRpc]
@@ -379,15 +394,26 @@ public class FlyController : NetworkBehaviour {
     }
 
     [ClientRpc]
-    public void RpcSetVolume(float volume)
+    public void RpcSetFlying()
     {
-        flyAudio.volume = volume;
+        flyState = FlyState.FLYING;
+        flyAudio.volume = 0.5f;
     }
 
     [ClientRpc]
-    public void RpcSetDeathSound()
+    public void RpcSetLanded ()
     {
+        flyState = FlyState.LANDED;
+        flyAudio.volume = 0.0f;
+    }
+
+    [ClientRpc]
+    public void RpcSetDead()
+    {
+        flyState = FlyState.DEAD;
+        flyAudio.volume = 0.0f;
         AudioSource.PlayClipAtPoint(deathSound, transform.position, 1);
+        AudioSource.PlayClipAtPoint(humanVictoryJingle, Vector3.zero);
     }
 
     #endregion
