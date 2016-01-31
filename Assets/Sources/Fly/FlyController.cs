@@ -350,10 +350,13 @@ public class FlyController : NetworkBehaviour {
                 || (flyState == FlyState.STUNNED && lastCollidedObject.layer == LayerMask.NameToLayer("Tapette")) // Thrown against the wall
                 )
         {
+            flyState = FlyState.DEAD;
+            flyAudio.volume = 0.0f;
+            AudioSource.PlayClipAtPoint(deathSound, transform.position, 1);
+
             // Death sound
             CmdSetDead();
         }
-
     }
 
     void OnCollisionExit (Collision collision)
