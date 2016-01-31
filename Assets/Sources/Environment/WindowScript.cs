@@ -2,10 +2,14 @@
 using System.Collections;
 
 public class WindowScript : MonoBehaviour {
+
     public bool isOpened, isMoving;
     public float openingHeight; //hauteur d'ouverture de la fenetre
     public float speed;
-    public Vector3 openedPos, closedPos, destination;
+    public int numberOfFlyAttacksRequired = 7;
+    private int numberOfFlyAttacks = 0;
+
+    private Vector3 openedPos, closedPos, destination;
 
     // Use this for initialization
     void Start () {
@@ -16,7 +20,6 @@ public class WindowScript : MonoBehaviour {
 
         isOpened = false;
         isMoving = false;
-
     }
 
     // Update is called once per frame
@@ -24,21 +27,15 @@ public class WindowScript : MonoBehaviour {
     {
         if (transform.position == openedPos)
             isOpened = true;
-
         else isOpened = false;
-
         if (transform.position != destination)
         {
             isMoving = true;
             transform.position = Vector3.MoveTowards(transform.position, destination, Time.deltaTime * speed);
         }
-
         else
-            isMoving = false;
-            
+            isMoving = false;    
     }
-
-
 
     //Animate the window
     public void changeWindowState()
@@ -56,9 +53,21 @@ public class WindowScript : MonoBehaviour {
             isMoving = true;
             destination = closedPos;
         }
-
     }
 
+    void OnCollisionEnter (Collision collision)
+    {
+        if(collision.gameObject.layer == LayerMask.NameToLayer("Tapette"))
+        {
+            changeWindowState();
+        }
+        else if (collision.gameObject.tag == "Fly" && numberOfFlyAttacks < numberOfFlyAttacksRequired)
+        {
+            isMoving = true;
+            numberOfFlyAttacks++;
+            destination = Vector3.Lerp(transform.position, openedPos, (float)numberOfFlyAttacks / (float)numberOfFlyAttacksRequired);
+        }
+    }
 
     
 }
