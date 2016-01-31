@@ -14,6 +14,14 @@ ModelImporter:
     100012: plafond_01
     100014: sol_01
     100016: cache_01
+    100018: plan_travail_01
+    100020: gaziniere_01
+    100022: placards_01
+    100024: plan_travail_02
+    100026: portes_placards_01
+    100028: portes_placards_02
+    100030: portes_placards_03
+    100032: portes_placards_04
     400000: //RootNode
     400002: fridge_01
     400004: mur_01
@@ -23,6 +31,14 @@ ModelImporter:
     400012: plafond_01
     400014: sol_01
     400016: cache_01
+    400018: plan_travail_01
+    400020: gaziniere_01
+    400022: placards_01
+    400024: plan_travail_02
+    400026: portes_placards_01
+    400028: portes_placards_02
+    400030: portes_placards_03
+    400032: portes_placards_04
     2300000: fridge_01
     2300002: mur_01
     2300004: mur_02
@@ -31,6 +47,14 @@ ModelImporter:
     2300010: plafond_01
     2300012: sol_01
     2300014: cache_01
+    2300016: plan_travail_01
+    2300018: gaziniere_01
+    2300020: placards_01
+    2300022: plan_travail_02
+    2300024: portes_placards_01
+    2300026: portes_placards_02
+    2300028: portes_placards_03
+    2300030: portes_placards_04
     3300000: fridge_01
     3300002: mur_01
     3300004: mur_02
@@ -39,6 +63,14 @@ ModelImporter:
     3300010: plafond_01
     3300012: sol_01
     3300014: cache_01
+    3300016: plan_travail_01
+    3300018: gaziniere_01
+    3300020: placards_01
+    3300022: plan_travail_02
+    3300024: portes_placards_01
+    3300026: portes_placards_02
+    3300028: portes_placards_03
+    3300030: portes_placards_04
     4300000: sol_01
     4300002: fridge_01
     4300004: mur_01
@@ -47,6 +79,14 @@ ModelImporter:
     4300010: mur_04
     4300012: plafond_01
     4300014: cache_01
+    4300016: plan_travail_01
+    4300018: gaziniere_01
+    4300020: plan_travail_02
+    4300022: placards_01
+    4300024: portes_placards_01
+    4300026: portes_placards_02
+    4300028: portes_placards_03
+    4300030: portes_placards_04
   materials:
     importMaterials: 1
     materialName: 0
