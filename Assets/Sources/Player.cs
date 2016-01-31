@@ -10,6 +10,8 @@ public class Player : NetworkBehaviour
         Fly
     }
 
+    public string m_DefaultHumanConfig = "";
+    public GameObject m_VrManagerPrefab = null;
     public GameObject m_HumanHeadPrefab = null;
     public GameObject m_HumanHandPrefab = null;
     public GameObject m_FlyPrefab = null;
@@ -41,6 +43,17 @@ public class Player : NetworkBehaviour
 
         if (ProcessPlayerType == PlayerType.Human)
         {
+            var vrManagerPrefabScript = m_VrManagerPrefab.GetComponent<VRManagerScript>();
+            vrManagerPrefabScript.ShowWand = false;
+            vrManagerPrefabScript.UseVRMenu = false;
+            vrManagerPrefabScript.ConfigFile = m_DefaultHumanConfig;
+            vrManagerPrefabScript.Navigation = VRManagerScript.ENavigation.None;
+            vrManagerPrefabScript.Manipulation = VRManagerScript.EManipulation.None;
+
+            var vrManagerObject = Instantiate(m_VrManagerPrefab, Vector3.zero, Quaternion.identity) as GameObject;
+            if (vrManagerObject == null) return;
+            vrManagerObject.name = "VRManager";
+
             CmdSpawnHuman();
         }
         else

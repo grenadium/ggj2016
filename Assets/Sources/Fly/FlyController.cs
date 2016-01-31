@@ -78,6 +78,7 @@ public class FlyController : NetworkBehaviour {
     // Audio
     public AudioClip deathSound;
     public AudioClip buzzSound;
+    public AudioClip[] boingSound;
 
     private Rigidbody flyBody;
     private AudioSource flyAudio;
@@ -95,6 +96,9 @@ public class FlyController : NetworkBehaviour {
         flyAudio = GetComponent<AudioSource>();
         GameObject world = GameObject.FindGameObjectWithTag("World");
         worldScale = world.transform.localScale.x; // We suppose scaling is uniform
+
+        flyBody.maxAngularVelocity = 0.01f;
+        flyBody.maxDepenetrationVelocity = 0.01f;
     }
 
     void Update ()
@@ -303,6 +307,9 @@ public class FlyController : NetworkBehaviour {
         {
             lastCollidedObject = collision.gameObject;
 
+            int randIndex = Random.Range(0, boingSound.Length - 1);
+            AudioSource.PlayClipAtPoint(boingSound[randIndex], collision.contacts[0].point);
+
             flyState = FlyState.STUNNED;
             timeOfStun = Time.realtimeSinceStartup;
 
@@ -323,6 +330,9 @@ public class FlyController : NetworkBehaviour {
             AudioSource.PlayClipAtPoint(deathSound, collision.contacts[0].point, 1);
 
             flyState = FlyState.DEAD;
+
+            GameManager gameManager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
+            gameManager.SignalVictory(Player.PlayerType.Human);
         }
 
     }
