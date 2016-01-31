@@ -31,6 +31,8 @@ public class FlyController : NetworkBehaviour {
     }
     private FlyState flyState = FlyState.FLYING;
 
+    public float minimumKillSpeed; //Vitesse minimale pour considerer que la tapette tue la mouche
+
     // Stun state
     private float timeOfStun = 0f; // time at which the fly was hit
     public float stunDuration = 0.2f; // time during which the fly has limited control over its motion

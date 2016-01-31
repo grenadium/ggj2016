@@ -17,10 +17,6 @@ public class TapetteController : NetworkBehaviour {
     private float lastSlapPlayed = 0f;
     private float jingleFadeDelay = 5f;
     private float lastJinglePlayed = 0f;
-
-    public float minimumKillSpeed; //Vitesse minimale pour considerer que la tapette tue la mouche
-    public float minimumJamBreakSpeed; //vitesse mini pour casser le pot de confiture
-    public float minimumSoundSpeed; //vitesse mini pour jouer un son de swing
     private int totalFrames;
 
     public float currentVelocity;
