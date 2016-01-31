@@ -11,6 +11,7 @@ public class GlobalVariables : MonoBehaviour {
     public static string T_HUMAN = "HumanPlayer";
     public static string T_WINDOW= "Window";
     public static string T_JAM = "Jam";
+    public static string T_MENU_ITEM = "MenuItem";
 
     //NAME LIST
 
