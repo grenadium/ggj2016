@@ -82,7 +82,8 @@ public class TapetteController : NetworkBehaviour {
 
     public void AskForSlap (Vector3 pos)
     {
-        CmdPlaySlapClip(pos);
+        //CmdPlaySlapClip(pos);
+        Slap(pos);
     }
 
     /// <summary>
