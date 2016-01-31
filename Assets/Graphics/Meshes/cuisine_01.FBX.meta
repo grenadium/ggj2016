@@ -33,6 +33,9 @@ ModelImporter:
     100050: etagere_02
     100052: porte_01
     100054: poignee_porte_01
+    100056: fenetre_01
+    100058: fenetre_02
+    100060: fenetre_cadre_01
     400000: //RootNode
     400002: fridge_01
     400004: mur_01
@@ -61,6 +64,9 @@ ModelImporter:
     400050: etagere_02
     400052: porte_01
     400054: poignee_porte_01
+    400056: fenetre_01
+    400058: fenetre_02
+    400060: fenetre_cadre_01
     2300000: fridge_01
     2300002: mur_01
     2300004: mur_02
@@ -88,6 +94,9 @@ ModelImporter:
     2300048: etagere_02
     2300050: porte_01
     2300052: poignee_porte_01
+    2300054: fenetre_01
+    2300056: fenetre_02
+    2300058: fenetre_cadre_01
     3300000: fridge_01
     3300002: mur_01
     3300004: mur_02
@@ -115,6 +124,9 @@ ModelImporter:
     3300048: etagere_02
     3300050: porte_01
     3300052: poignee_porte_01
+    3300054: fenetre_01
+    3300056: fenetre_02
+    3300058: fenetre_cadre_01
     4300000: sol_01
     4300002: fridge_01
     4300004: mur_01
@@ -142,6 +154,8 @@ ModelImporter:
     4300048: etagere_02
     4300050: porte_01
     4300052: poignee_porte_01
+    4300054: fenetre_cadre_01
+    4300056: fenetre_01
   materials:
     importMaterials: 1
     materialName: 0
