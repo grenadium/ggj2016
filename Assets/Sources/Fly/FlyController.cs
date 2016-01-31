@@ -78,6 +78,7 @@ public class FlyController : NetworkBehaviour {
     // Audio
     public AudioClip deathSound;
     public AudioClip buzzSound;
+    public AudioClip[] boingSound;
 
     private Rigidbody flyBody;
     private AudioSource flyAudio;
@@ -305,6 +306,9 @@ public class FlyController : NetworkBehaviour {
             && flyState != FlyState.DEAD)
         {
             lastCollidedObject = collision.gameObject;
+
+            int randIndex = Random.Range(0, boingSound.Length - 1);
+            AudioSource.PlayClipAtPoint(boingSound[randIndex], collision.contacts[0].point);
 
             flyState = FlyState.STUNNED;
             timeOfStun = Time.realtimeSinceStartup;
