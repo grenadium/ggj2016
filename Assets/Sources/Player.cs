@@ -50,6 +50,12 @@ public class Player : NetworkBehaviour
             vrManagerPrefabScript.Navigation = VRManagerScript.ENavigation.None;
             vrManagerPrefabScript.Manipulation = VRManagerScript.EManipulation.None;
 
+            var mainCamera = GameObject.Find("Main Camera");
+            if (mainCamera != null)
+            {
+                vrManagerPrefabScript.TemplateCamera = mainCamera;
+            }
+
             var vrManagerObject = Instantiate(m_VrManagerPrefab, Vector3.zero, Quaternion.identity) as GameObject;
             if (vrManagerObject == null) return;
             vrManagerObject.name = "VRManager";

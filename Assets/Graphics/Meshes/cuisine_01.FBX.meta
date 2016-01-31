@@ -27,6 +27,10 @@ ModelImporter:
     100038: fridge_poignee_01
     100040: table_01
     100042: table_pieds_01
+    100044: luminaire_01
+    100046: luminaire_01_base
+    100048: luminaire_01_globe
+    100050: etagere_02
     400000: //RootNode
     400002: fridge_01
     400004: mur_01
@@ -49,6 +53,10 @@ ModelImporter:
     400038: fridge_poignee_01
     400040: table_01
     400042: table_pieds_01
+    400044: luminaire_01
+    400046: luminaire_01_base
+    400048: luminaire_01_globe
+    400050: etagere_02
     2300000: fridge_01
     2300002: mur_01
     2300004: mur_02
@@ -70,6 +78,10 @@ ModelImporter:
     2300036: fridge_poignee_01
     2300038: table_01
     2300040: table_pieds_01
+    2300042: luminaire_01
+    2300044: luminaire_01_base
+    2300046: luminaire_01_globe
+    2300048: etagere_02
     3300000: fridge_01
     3300002: mur_01
     3300004: mur_02
@@ -91,6 +103,10 @@ ModelImporter:
     3300036: fridge_poignee_01
     3300038: table_01
     3300040: table_pieds_01
+    3300042: luminaire_01
+    3300044: luminaire_01_base
+    3300046: luminaire_01_globe
+    3300048: etagere_02
     4300000: sol_01
     4300002: fridge_01
     4300004: mur_01
@@ -112,6 +128,10 @@ ModelImporter:
     4300036: fridge_poignee_01
     4300038: table_01
     4300040: table_pieds_01
+    4300042: luminaire_01
+    4300044: luminaire_01_globe
+    4300046: luminaire_01_base
+    4300048: etagere_02
   materials:
     importMaterials: 1
     materialName: 0
