@@ -60,6 +60,7 @@ public class WindowScript : MonoBehaviour {
         if (collision.gameObject.layer == LayerMask.NameToLayer("Tapette"))
         {
             isMoving = true;
+            numberOfFlyAttacks = 0;
             destination = closedPos;
         }
         else if (collision.gameObject.tag == "Fly" && numberOfFlyAttacks < numberOfFlyAttacksRequired)
