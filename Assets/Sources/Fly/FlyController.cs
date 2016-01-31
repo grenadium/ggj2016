@@ -116,7 +116,8 @@ public class FlyController : NetworkBehaviour {
         if(tapette != null)
         {
             TapetteDisplay tapetteDisplay = tapette.GetComponentInChildren<TapetteDisplay>();
-            tapetteDisplay.setDisplayFlyReady();
+            if (tapetteDisplay != null)
+                tapetteDisplay.setDisplayFlyReady();
         }
     }
 

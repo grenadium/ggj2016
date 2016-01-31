@@ -101,7 +101,11 @@ public class TapetteController : NetworkBehaviour {
             lastSlapPlayed = Time.realtimeSinceStartup;
         }
 
-        if(GameObject.FindGameObjectWithTag("Fly").GetComponent<FlyController>().flyState != FlyController.FlyState.DEAD)
+        GameObject fly;
+        if(
+            ((fly = GameObject.FindGameObjectWithTag("Fly")) != null && fly.GetComponent<FlyController>().flyState != FlyController.FlyState.DEAD)
+            || fly == null
+        )
         {
             // Jingle
             if (!jingleSoundIsPlaying)
