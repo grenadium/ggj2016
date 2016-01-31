@@ -99,11 +99,20 @@ public class FlyController : NetworkBehaviour {
     {
         flyBody = GetComponent<Rigidbody>();
         flyAudio = GetComponent<AudioSource>();
+
         GameObject world = GameObject.FindGameObjectWithTag("World");
         worldScale = world.transform.localScale.x; // We suppose scaling is uniform
 
         flyBody.maxAngularVelocity = 0.01f;
         flyBody.maxDepenetrationVelocity = 0.01f;
+
+        // Get the tapette
+        GameObject tapette = GameObject.FindGameObjectWithTag("Tapette");
+        if(tapette != null)
+        {
+            TapetteDisplay tapetteDisplay = tapette.GetComponentInChildren<TapetteDisplay>();
+            tapetteDisplay.setDisplayFlyReady();
+        }
     }
 
     void Update ()

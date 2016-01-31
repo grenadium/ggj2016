@@ -25,10 +25,10 @@ public class JamScript : MonoBehaviour {
     //Fonction pour coller la mouche pendant quelques secondes
     public IEnumerator stickFly(GameObject fly)
     {
-          Debug.Log("fly stuck !");
-         //backup de la velocite
-         Vector3 flyVelocity = fly.GetComponent<Rigidbody>().velocity;
-         Vector3 flyAngVelocity = fly.GetComponent<Rigidbody>().angularVelocity;
+        Debug.Log("fly stuck !");
+        //backup de la velocite
+        Vector3 flyVelocity = fly.GetComponent<Rigidbody>().velocity;
+        Vector3 flyAngVelocity = fly.GetComponent<Rigidbody>().angularVelocity;
 
         fly.GetComponent<Rigidbody>().velocity = Vector3.zero;
         fly.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;

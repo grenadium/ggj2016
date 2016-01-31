@@ -8,6 +8,6 @@ public class TapetteCollider : MonoBehaviour {
     void OnCollisionEnter (Collision collision)
     {
         if(owner != null)
-            owner.Slap(collision.contacts[0].point);
+            owner.AskForSlap(collision.contacts[0].point);
     }
 }

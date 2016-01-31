@@ -7,7 +7,7 @@ using System.Collections;
 public class GlobalVariables : MonoBehaviour {
 
     //TAG LIST
-    public static string T_FLY = "FlyPlayer";
+    public static string T_FLY = "Fly";
     public static string T_HUMAN = "HumanPlayer";
     public static string T_WINDOW= "Window";
     public static string T_JAM = "Jam";

@@ -79,6 +79,12 @@ public class TapetteController : NetworkBehaviour {
     #endregion
 
     #region Collision events
+
+    public void AskForSlap (Vector3 pos)
+    {
+        CmdPlaySlapClip(pos);
+    }
+
     /// <summary>
     /// Called in every client
     /// </summary>
